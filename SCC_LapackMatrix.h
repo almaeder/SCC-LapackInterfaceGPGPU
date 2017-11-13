@@ -5,7 +5,7 @@
 #define NDEBUG
 #endif
 
-#include "LapackHeaders.h"
+#include "SCC_LapackHeaders.h"
 
 
 #ifndef _LapackMatrix_

@@ -1,5 +1,5 @@
-#include "LapackMatrix.h"
-#include "LapackHeaders.h"
+#include "SCC_LapackMatrix.h"
+#include "SCC_LapackHeaders.h"
 
 #ifndef  _LAPACKMATRIXROUTINES_
 #define  _LAPACKMATRIXROUTINES_
