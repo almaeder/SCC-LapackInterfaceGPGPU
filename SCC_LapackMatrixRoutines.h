@@ -10,6 +10,7 @@
 #include <complex>
 #include <cstdlib>
 #include <limits>
+#include <cstring>
 using namespace std;
 
 
@@ -161,6 +162,20 @@ public:
         X.resize(N);
 
         return X;
+	}
+
+
+    //
+    // A convenience solve interface. It is assumed that Bptr points to contiguous
+    // data of size of the number of rows of A. No bounds checking is performed.
+    //
+
+	vector<double> qrSolve(double* Bptr, const LapackMatrix& Ain, double rcondCutoff = -1.0)
+	{
+		long M     = Ain.getRowDimension();
+		vector<double>                 B(M);
+		std::memcpy(B.data(),Bptr,M*sizeof(double));
+		return qrSolve(B,Ain,rcondCutoff);
 	}
 
 	bool equalMatrixDimensions(const LapackMatrix& A, const LapackMatrix& B)
