@@ -1,8 +1,35 @@
 #include "SCC_LapackMatrix.h"
 #include "SCC_LapackHeaders.h"
+//
+// SCC::LapackMatrixRoutines
+//
+// A miscellaneous collection of classes whose functionality is
+// based upon LAPACK routines. These routine are meant
+// to be used with instances of LapackMatrix.
+//
+// Author          : Chris Anderson
+// Version         : July, 27, 2018
+/*
+#############################################################################
+#
+# Copyright  2015-2018 Chris Anderson
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the Lesser GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# For a copy of the GNU General Public License see
+# <http://www.gnu.org/licenses/>.
+#
+#############################################################################
+*/
 
-#ifndef  _LAPACKMATRIXROUTINES_
-#define  _LAPACKMATRIXROUTINES_
 
 #include <iostream>
 #include <vector>
@@ -11,8 +38,11 @@
 #include <cstdlib>
 #include <limits>
 #include <cstring>
+#include <stdexcept>
 using namespace std;
 
+#ifndef  _LAPACKMATRIXROUTINES_
+#define  _LAPACKMATRIXROUTINES_
 
 namespace SCC
 {
@@ -20,8 +50,6 @@ namespace SCC
 // C++  int    ==  Fortran LOGICAL
 // C++  long   ==  Fortran INTEGER
 // C++  double ==  Fortran DOUBLE PRECISION
-
-
 
 /*
 	 DGELSY computes the minimum-norm solution to a real linear least
@@ -1086,6 +1114,228 @@ public:
 		long               svdDim;
 
 };
+
+//
+// Class QRutility can be used to create a solution to
+//
+//               A x = b
+//
+// where A is a full rank M x N matrix with M >= N.
+// If M > N then a least squares approximation to the
+// solution is determined.
+//
+// The solution process is decomposed into two
+// steps; a create QR factors step followed by
+// a create solution step. The QR factorization
+// is retained internally so that, for a given
+// system and multiple right hand sides, the QR
+// factorization need only be computed once.
+//
+// The procedure used is essentially that of
+// the LAPACK routine DGELS performed without scaling.
+// That routine, as well as this class, creates
+// a QR factorization without pivoting, so no
+// rank determination is performed. For the solution
+// of a system with undetermined properties, one
+// might consider using SCC::DGELSY or another class
+// that uses Lapack routine DGELSY to construct
+// QR solutions.
+//
+class QRutility
+{
+    public :
+
+    QRutility()
+    {
+    initialize();
+    }
+
+    QRutility(const QRutility& Q)
+    {
+    initialize(Q);
+    }
+
+    void initialize()
+    {
+    QRfactors.initialize();
+    TAU.clear();
+    WORK.clear();
+    bTemp.clear();
+    dormqrWorkSize = -1;
+    }
+
+    void initialize(const QRutility& Q)
+    {
+    QRfactors.initialize(Q.QRfactors);
+    TAU            = Q.TAU;
+    WORK           = Q.WORK;
+    bTemp          = Q.bTemp;
+    dormqrWorkSize = Q.dormqrWorkSize;
+    }
+
+    vector<double> createQRsolution(vector<double>& b)
+    {
+    try {if(QRfactors.getRowDimension() != (long)b.size()) {throw std::runtime_error("createQRsolution");}}
+    catch (std::runtime_error& e)
+    {
+     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
+     cerr << "createSolution called be fore createQRfactors " << endl;
+     exit(1);
+    }
+
+    // Capture right hand side
+
+    bTemp = b;
+
+    char SIDE    = 'L';
+    char TRANS   = 'T';
+    long M       = (long)b.size();
+    long NRHS    = 1;
+    long K       = M;
+    long LDA     = QRfactors.getRowDimension();
+    double* Aptr = QRfactors.getDataPointer();
+    long LDC     = M;
+
+    long LWORK  = -1;
+    long INFO   =  0;
+
+    double WORKDIM;
+
+    // Obtain the optimal work size if it has not already
+    // been determined
+
+    if(dormqrWorkSize < 0)
+    {
+    dormqr_(&SIDE, &TRANS, &M, &NRHS, &K,Aptr,& LDA, &TAU[0], &bTemp[0],
+    &LDC, &WORKDIM, &LWORK, &INFO);
+
+    dormqrWorkSize = (long)WORKDIM+1;
+    }
+
+    LWORK = dormqrWorkSize;
+    WORK.resize(LWORK);
+
+    dormqr_(&SIDE, &TRANS, &M, &NRHS, &K,Aptr,& LDA, &TAU[0], &bTemp[0],
+    &LDC, &WORK[0], &LWORK, &INFO);
+
+    try {if(INFO != 0) {throw std::runtime_error("createQRsolution");}}
+    catch (std::runtime_error& e)
+    {
+     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
+     cerr << "DORMQR Failed : INFO = " << INFO  << endl;
+     exit(1);
+    }
+
+    // Note: only using QRfactors.cols elements of bTemp.
+
+	// Backsolve upper trignular system to obtain a solution
+
+	char UPLO    = 'U';
+	TRANS        = 'N';
+	char DIAG    = 'N';
+	M            = QRfactors.getColDimension();
+	long N       = M;
+	NRHS         = 1;
+	LDA          = QRfactors.getRowDimension();
+	long LDB     = M;
+
+	dtrtrs_(&UPLO, &TRANS, &DIAG, &N, &NRHS, Aptr, &LDA,&bTemp[0],&LDB,&INFO);
+
+    try {if(INFO != 0) {throw std::runtime_error("createQRsolution");}}
+    catch (std::runtime_error& e)
+    {
+     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
+     cerr << "DTRTRS detected singular matrix : INFO = " << INFO  << endl;
+     exit(1);
+    }
+
+	return bTemp;
+    }
+
+
+    //
+    // A convenience solve interface. It is assumed that Bptr points to contiguous
+    // data of size of the number of rows of A. No bounds checking is performed.
+    //
+
+	vector<double> createQRsolution(double* Bptr)
+	{
+		long M  = QRfactors.getRowDimension();
+		vector<double>                   B(M);
+		std::memcpy(B.data(),Bptr,M*sizeof(double));
+		return createQRsolution(B);
+	}
+//
+//  This member function creates and stores internally the QR factorization
+//  of the M x N input matrix A. It is assumed that M >= N and A is of
+//  full rank.
+//
+	void createQRfactors(const SCC::LapackMatrix& A)
+	{
+    long M   = A.getRowDimension();
+    long N   = A.getColDimension();
+
+    try
+    {
+    if( M < N ) throw std::runtime_error("createQRfactors");
+    }
+    catch (std::runtime_error& e)
+    {
+     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
+     cerr << "Input matrix rows < cols " << '\n';
+     cerr << "rows : " << M << " cols : " << N << endl;
+     exit(1);
+    }
+
+	// Capture system
+
+	QRfactors.initialize(A);
+
+    // Create QR factors
+
+    long LDA = M;
+
+    TAU.resize(N);
+
+    long LWORK  = -1;
+    long INFO   =  0;
+
+    double WORKDIM;
+
+    // First call to obtain the optimal work size
+
+    dgeqrf_(&M, &N, A.getDataPointer(), &LDA, &TAU[0],&WORKDIM, &LWORK, &INFO);
+
+    LWORK = (long)WORKDIM+1;
+    WORK.resize(LWORK);
+
+    // Create QR factors
+
+    dgeqrf_(&M, &N, QRfactors.getDataPointer(), &LDA, &TAU[0],&WORK[0], &LWORK, &INFO);
+
+    try {if(INFO != 0) {throw std::runtime_error("createQRfactors");}}
+    catch (std::runtime_error& e)
+    {
+     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
+     cerr << "DGEQRF Failed : INFO = " << INFO  << endl;
+     exit(1);
+    }
+
+    // Reset work sizes to -1  to trigger a re-computation
+    // of work storage requirements on first use
+    // of createQRsolution
+
+    dormqrWorkSize = -1;
+	}
+
+    SCC::LapackMatrix QRfactors; // QR factor component as returned by dgeqrf
+    vector<double>          TAU; // QR factor component as returned by dgeqrf
+    vector<double>         WORK;
+    vector<double>        bTemp;
+
+    long         dormqrWorkSize;
+};
+
 
 } // End of SCC Namespace declaration
 

@@ -5,11 +5,20 @@
 #define NDEBUG
 #endif
 
-#include "SCC_LapackHeaders.h"
-
 
 #ifndef _LapackMatrix_
 #define _LapackMatrix_
+//
+// Prototypes for the only two LAPACK BLAS routines used by this class
+//
+extern "C" void dgemm_(char* TRANSA,char* TRANSB,long* M, long*N ,long* K,double* ALPHA,
+                       double* A,long* LDA,double* B, long* LDB,double* BETA,double* C,long* LDC);
+
+extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Aptr,
+                       long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
+
+//
+//
 
 #include <vector>
 #include <cassert>
@@ -29,18 +38,38 @@ using namespace std;
  *
  * Data type mapping used:
  *
+ * C++  char   ==  Fortran character
  * C++  int    ==  Fortran LOGICAL
  * C++  long   ==  Fortran INTEGER
  * C++  double ==  Fortran DOUBLE PRECISION
  *
- * Linking to the Fortran routines  using -llapack -lblas
+ * Linking to the Fortran routines using -llapack -lblas
  *
  * April 15, 2016
  *
+ * Updated July 27, 2018 (CRA)
+ *
+ *
  */
-
 /*
-
+#############################################################################
+#
+# Copyright  2016-2018 Chris Anderson
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the Lesser GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# For a copy of the GNU General Public License see
+# <http://www.gnu.org/licenses/>.
+#
+#############################################################################
 */
 
 namespace SCC
@@ -109,7 +138,7 @@ public:
 
 	//
 	// Initialize member functions with local memory
-	// allocation
+	// allocation. Re-use existing allocation if possible
 	//
 	void initialize()
 	{
@@ -123,36 +152,69 @@ public:
 		cols             = 0;
 	}
 
+    //
+    // This initialize always creates (or uses) a
+    // local memory allocation.
+    //
 	void initialize(long rows, long cols)
 	{
-    if((dataPtr != nullptr)&&(not externDataFlag)) delete [] dataPtr;
+	    // Re-use existing allocation if possible
 
-    externDataFlag   = false;
-	this->rows       = rows;
-	this->cols       = cols;
-	dataPtr          = new double[rows*cols];
-    for(long i = 0; i < rows*cols; i++) {dataPtr[i] =0.0;}
+		if((dataPtr != nullptr)&&(not externDataFlag))
+		{
+			if( (this->rows*this->cols) != rows*cols)
+			{
+				delete [] dataPtr;
+				dataPtr = new double[rows*cols];
+			}
+		}
+
+		if((dataPtr == nullptr)||(externDataFlag))
+		{
+		dataPtr        = new double[rows*cols];
+		externDataFlag = false;
+		}
+
+		this->rows       = rows;
+		this->cols       = cols;
+		for(long i = 0; i < rows*cols; i++) {dataPtr[i] =0.0;}
 	}
+
+    //
+    // This initialize always creates (or uses) a
+    // local memory allocation.
+    //
 
 	void initialize(const LapackMatrix& M)
 	{
-    if((dataPtr != nullptr)&&(not externDataFlag)) delete [] dataPtr;
+		if((dataPtr != nullptr)&&(not externDataFlag))
+		{
+			if( (this->rows*this->cols) != M.rows*M.cols)
+			{
+				delete [] dataPtr;
+				dataPtr = new double[M.rows*M.cols];
+			}
+		}
 
-    externDataFlag   = false;
-	this->rows = M.rows;
-	this->cols = M.cols;
-	dataPtr    = new double[rows*cols];
-	for(long i = 0; i < rows*cols; i++)
-	{
-		dataPtr[i] = M.dataPtr[i];
-	}
+		if((dataPtr == nullptr)||(externDataFlag))
+		{
+		dataPtr        = new double[M.rows*M.cols];
+		externDataFlag = false;
+		}
+
+		this->rows = M.rows;
+		this->cols = M.cols;
+		for(long i = 0; i < rows*cols; i++)
+		{
+			dataPtr[i] = M.dataPtr[i];
+		}
 	}
 
 
 	//
 	// Initialize with externally defined data.
 	//
-	// The data is assumeed to be stored in column major
+	// The data is assumed to be stored in column major
 	// order (Fortran convention)
 	//
 	// Deleting or re-initializing this instance
