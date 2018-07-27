@@ -47,6 +47,9 @@ using namespace std;
  *
  * April 15, 2016
  *
+ * Updated July 27, 2018 (CRA)
+ *
+ *
  */
 /*
 #############################################################################
@@ -135,7 +138,7 @@ public:
 
 	//
 	// Initialize member functions with local memory
-	// allocation
+	// allocation. Re-use existing allocation if possible
 	//
 	void initialize()
 	{
@@ -149,36 +152,69 @@ public:
 		cols             = 0;
 	}
 
+    //
+    // This initialize always creates (or uses) a
+    // local memory allocation.
+    //
 	void initialize(long rows, long cols)
 	{
-    if((dataPtr != nullptr)&&(not externDataFlag)) delete [] dataPtr;
+	    // Re-use existing allocation if possible
 
-    externDataFlag   = false;
-	this->rows       = rows;
-	this->cols       = cols;
-	dataPtr          = new double[rows*cols];
-    for(long i = 0; i < rows*cols; i++) {dataPtr[i] =0.0;}
+		if((dataPtr != nullptr)&&(not externDataFlag))
+		{
+			if( (this->rows*this->cols) != rows*cols)
+			{
+				delete [] dataPtr;
+				dataPtr = new double[rows*cols];
+			}
+		}
+
+		if((dataPtr == nullptr)||(externDataFlag))
+		{
+		dataPtr        = new double[rows*cols];
+		externDataFlag = false;
+		}
+
+		this->rows       = rows;
+		this->cols       = cols;
+		for(long i = 0; i < rows*cols; i++) {dataPtr[i] =0.0;}
 	}
+
+    //
+    // This initialize always creates (or uses) a
+    // local memory allocation.
+    //
 
 	void initialize(const LapackMatrix& M)
 	{
-    if((dataPtr != nullptr)&&(not externDataFlag)) delete [] dataPtr;
+		if((dataPtr != nullptr)&&(not externDataFlag))
+		{
+			if( (this->rows*this->cols) != M.rows*M.cols)
+			{
+				delete [] dataPtr;
+				dataPtr = new double[M.rows*M.cols];
+			}
+		}
 
-    externDataFlag   = false;
-	this->rows = M.rows;
-	this->cols = M.cols;
-	dataPtr    = new double[rows*cols];
-	for(long i = 0; i < rows*cols; i++)
-	{
-		dataPtr[i] = M.dataPtr[i];
-	}
+		if((dataPtr == nullptr)||(externDataFlag))
+		{
+		dataPtr        = new double[M.rows*M.cols];
+		externDataFlag = false;
+		}
+
+		this->rows = M.rows;
+		this->cols = M.cols;
+		for(long i = 0; i < rows*cols; i++)
+		{
+			dataPtr[i] = M.dataPtr[i];
+		}
 	}
 
 
 	//
 	// Initialize with externally defined data.
 	//
-	// The data is assumeed to be stored in column major
+	// The data is assumed to be stored in column major
 	// order (Fortran convention)
 	//
 	// Deleting or re-initializing this instance
