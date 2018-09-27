@@ -93,7 +93,7 @@ class LapackBandMatrix
 	{
 		kl = S.kl;
 		ku = S.ku;
-		N  - S.N;
+		N  = S.N;
 	    Sp.initialize(S.Sp);
 
 	}
