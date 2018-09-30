@@ -134,6 +134,12 @@ class LapackBandMatrix
 
 	double* getDataPointer() const {return Sp.dataPtr;}
 
+    void setToValue(double val)
+	{
+		Sp.setToValue(0.0);
+	}
+
+
 
 // Fortran indexing bounds check max(1,j-ku) <= i <= min(N,j+kl)
 
