@@ -5,6 +5,27 @@
  *      Author: anderson
  */
 
+/*
+#############################################################################
+#
+# Copyright  2018 Chris Anderson
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the Lesser GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# For a copy of the GNU General Public License see
+# <http://www.gnu.org/licenses/>.
+#
+#############################################################################
+*/
+
 // Headers for band matrix routines
 
 extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, long*  	NRHS,
@@ -20,6 +41,9 @@ using namespace std;
 
 #ifndef _SCC_LapackBandRoutines_
 #define _SCC_LapackBandRoutines_
+
+namespace SCC
+{
 
 /*
 *  DGBSVX uses the LU factorization to compute the solution to a real
@@ -175,6 +199,6 @@ class DGBSVX
     double BERR;
 };
 
-
+}
 
 #endif /* _SCC_LapackBandRoutines__ */
