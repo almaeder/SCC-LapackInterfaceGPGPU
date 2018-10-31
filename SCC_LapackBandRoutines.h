@@ -70,14 +70,13 @@ class DGBSVX
 	EQUED = T;
 	}
 
-
 	void applyInverse(SCC::LapackBandMatrix& S, vector<double>& f)
 	{
-    //
-    // Now re-solve the system using the band solver
-    // Use the high level interface for now, worry about
-    // lower levels later.
-    //
+	applyInverse(S,&f[0]);
+	}
+
+	void applyInverse(SCC::LapackBandMatrix& S,double* f)
+	{
     //char FACT  = 'E'; // E Or N for no-equilibration
 
     char TRANS = 'N';
@@ -129,8 +128,9 @@ class DGBSVX
 
     // Capture the solution
 
-    f = X;
+    // f = X;
 
+    std::memcpy(&f[0],&X[0],N*sizeof(double));
 	}
 
 
