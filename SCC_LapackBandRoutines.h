@@ -35,6 +35,7 @@ extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, 
 
 #include <vector>
 #include <iostream>
+#include <cstring>
 using namespace std;
 
 #include "SCC_LapackBandMatrix.h"
