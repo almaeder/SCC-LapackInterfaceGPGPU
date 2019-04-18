@@ -1191,7 +1191,7 @@ class QRutility
     char TRANS   = 'T';
     long M       = (long)b.size();
     long NRHS    = 1;
-    long K       = M;
+    long K       = QRfactors.getColDimension();
     long LDA     = QRfactors.getRowDimension();
     double* Aptr = QRfactors.getDataPointer();
     long LDC     = M;
