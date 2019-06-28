@@ -224,8 +224,6 @@ public:
 
 	numeric_limits<double>   numLimits;
 };
-
-
 /*
 *> DGESVD computes the singular value decomposition (SVD) of a real
 *> M-by-N matrix A, optionally computing the left and/or right singular
@@ -271,6 +269,7 @@ public:
 
     this->VT.initialize();
     this->svdDim = 0;
+    this->overwriteExtDataFlag = false;
 	}
 
 	void initialize(const DGESVD& dgesvd)
@@ -278,31 +277,34 @@ public:
 	this->A = dgesvd.A;
     this->U = dgesvd.U;
 
-    this->singularValues = dgesvd.singularValues;
-    this->VT             = dgesvd.VT;
-    this->svdDim         = dgesvd.svdDim;
+    this->singularValues       = dgesvd.singularValues;
+    this->VT                   = dgesvd.VT;
+    this->svdDim               = dgesvd.svdDim;
+    this->overwriteExtDataFlag = dgesvd.overwriteExtDataFlag;
 	}
 
 
-	bool equalMatrixDimensions(const LapackMatrix& A, const LapackMatrix& B)
+	bool equalMatrixDimensions(const SCC::LapackMatrix& A, const SCC::LapackMatrix& B)
 	{
 		if((A.rows != B.rows)||(A.cols != B.cols)) return false;
 		return true;
 	}
 
-	void computeSVD(const LapackMatrix& A)
+	void computeSVD(const SCC::LapackMatrix& A)
 	{
-		// Copy A, since A is overwritten or destroyed by
-	    // the routine.
 
+        if(not this->overwriteExtDataFlag)
+        {
+        	// Copy A, since A is overwritten or destroyed by the routine.
 
-		if(not equalMatrixDimensions(this->A,A))
-		{
-		this->A.initialize(A);
-		}
-		else
-		{
-		this->A = A;
+        	if(not equalMatrixDimensions(this->A,A))
+        	{
+        		this->A.initialize(A);
+        	}
+        	else
+        	{
+        		this->A = A;
+        	}
 		}
 
 
@@ -355,19 +357,40 @@ public:
         }
 	}
 
-	void computeThinSVD(const LapackMatrix& A)
+//
+//  In this call, the matrix is passed via a pointer to the
+//  matrix data assumed to be stored with the Fortran convention
+//  by columns.
+//
+//  !!! Important: the input matrix data is overwritten during the
+//  solution process. There is no bounds checking performed on
+//  the input matrix.
+//
+//  This routine is added to avoid the need for extraneous copying
+//  of input matrix data.
+//
+    void computeSVD(long Arows, long Acols, double* Adata)
+    {
+        this->overwriteExtDataFlag = true;
+    	this->A.initialize(Arows,Acols,Adata);
+    	computeSVD(this->A);
+    	this->overwriteExtDataFlag = false;
+    }
+
+	void computeThinSVD(const SCC::LapackMatrix& A)
 	{
-		// Copy A, since A is overwritten or destroyed by
-	    // the routine.
+        if(not this->overwriteExtDataFlag)
+        {
+            // Copy A, so that input A is not overwritten or destroyed by the routine.
 
-
-		if(not equalMatrixDimensions(this->A,A))
-		{
-		this->A.initialize(A);
-		}
-		else
-		{
-		this->A = A;
+        	if(not equalMatrixDimensions(this->A,A))
+        	{
+        		this->A.initialize(A);
+        	}
+        	else
+        	{
+        		this->A = A;
+        	}
 		}
 
 
@@ -420,6 +443,26 @@ public:
         }
 	}
 
+//
+//  In this call, the matrix is passed via a pointer to the
+//  matrix data assumed to be stored with the Fortran convention
+//  by columns.
+//
+//  !!! Important: the input matrix data is overwritten during the
+//  solution process. There is no bounds checking performed on
+//  the input matrix.
+//
+//  This routine is added to avoid the need for extraneous copying
+//  of input matrix data.
+//
+    void computeThinSVD(long Arows, long Acols, double* Adata)
+    {
+        this->overwriteExtDataFlag = true;
+    	this->A.initialize(Arows,Acols,Adata);
+    	computeThinSVD(this->A);
+    	this->overwriteExtDataFlag = false;
+    }
+
 	long getSVDdim(){return svdDim;}
 
 	vector<double> applyPseudoInverse(vector<double>& b, double svdCutoff = -1.0)
@@ -469,7 +512,7 @@ public:
 			xStar[i] /= singularValues[i];
 		}
 
-		LapackMatrix Vstar;
+		SCC::LapackMatrix Vstar;
 
 	    /*
 	    Vstar = VT.getRowSlice(0,svdDim-1);
@@ -512,12 +555,12 @@ public:
 		return x;
 	}
 
-    LapackMatrix     A;
-    LapackMatrix     U;
+    SCC::LapackMatrix     A;
+    SCC::LapackMatrix     U;
 
     vector<double> singularValues;
 
-    LapackMatrix           VT;
+    SCC::LapackMatrix     VT;
 
 	char                JOBU;
 	char               JOBVT;
@@ -525,9 +568,10 @@ public:
 	vector<double>      WORK;
 
 	long               svdDim;
-
-
+	bool overwriteExtDataFlag;
 };
+
+
 
 /*
    Upon construction or initialization with an input LapackMatrix instance A
