@@ -125,21 +125,24 @@ public:
     }
 
 
-	vector<double> qrSolve(const vector<double> B, const LapackMatrix& A, double rcondCutoff = -1.0)
+
+
+	vector<double> qrSolve(const vector<double>& B, const LapackMatrix& A, double rcondCutoff = -1.0)
 	{
 	    if(rcondCutoff < 0) {RCOND = 10.0*numLimits.epsilon();}
 	    else                {RCOND = rcondCutoff;}
 
-		// Copy A, since A is overwritten or destroyed by
-	    // the routine.
-
-		if(not equalMatrixDimensions(this->A,A))
-		{
-		this->A.initialize(A);
-		}
-		else
-		{
-		this->A = A;
+        if(not this->overwriteExtDataFlag)
+        {
+		// Copy A, since A is overwritten or destroyed by the routine.
+        	if(not equalMatrixDimensions(this->A,A))
+        	{
+        		this->A.initialize(A);
+        	}
+        	else
+        	{
+        		this->A = A;
+        	}
 		}
 
 
@@ -206,6 +209,27 @@ public:
 		return qrSolve(B,Ain,rcondCutoff);
 	}
 
+//
+//  In this call, the matrix is passed via a pointer to the
+//  matrix data assumed to be stored with the Fortran convention
+//  by columns.
+//
+//  !!! Important: the input matrix data is overwritten during the
+//  solution process. There is no bounds checking performed on
+//  the input matrix.
+//
+//  This routine is added to avoid the need for extraneous copying
+//  of input matrix data.
+//
+    vector<double> qrSolve(const vector<double>& B, long Arows, long Acols, double* Adata, double rcondCutoff = -1.0)
+    {
+        this->overwriteExtDataFlag = true;
+    	this->A.initialize(Arows,Acols,Adata);
+    	vector<double> X = qrSolve(B,this->A,rcondCutoff);
+    	this->overwriteExtDataFlag = false;
+    	return X;
+    }
+
 	bool equalMatrixDimensions(const LapackMatrix& A, const LapackMatrix& B)
 	{
 		if((A.rows != B.rows)||(A.cols != B.cols)) return false;
@@ -223,6 +247,8 @@ public:
 	vector<double>      WORK;
 
 	numeric_limits<double>   numLimits;
+
+    bool overwriteExtDataFlag;
 };
 /*
 *> DGESVD computes the singular value decomposition (SVD) of a real
