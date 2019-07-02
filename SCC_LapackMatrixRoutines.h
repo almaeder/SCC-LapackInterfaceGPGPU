@@ -107,6 +107,7 @@ public:
     this->JPVT.clear();
     RCOND = 10.0*numLimits.epsilon();
     RANK  = 0;
+    this->overwriteExtDataFlag = false;
 	}
 
 
@@ -117,6 +118,7 @@ public:
     this->JPVT = dgelsy.JPVT;
     RCOND      = dgelsy.RCOND;
     RANK       = dgelsy.RANK;
+    this->overwriteExtDataFlag = dgelsy.overwriteExtDataFlag;
 	}
 
     long getRank()
