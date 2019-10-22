@@ -1000,7 +1000,7 @@ public:
 // expected to have single precision accuracy for the same reasons.
 //
 // In the implementation below, the solution components are only accumulated
-// when the singular values are greater than the max(svdCutoff,1.0e-07).
+// when the singular values are greater than the max(svdCutoff).
 //
 // When M < N, so the solution is underdetermined, the minimum L2
 // norm solution is returned and only M approximate singular
@@ -1089,7 +1089,7 @@ public:
         for(long i= N-1; i >= stopIndex; i--)
         {
         	singularValues[svIndex] = sqrt(abs(eigenValues[i]));
-        	if((singularValues[svIndex] > svdCutoff) && (singularValues[svIndex] > 1.0e-7))
+        	if(singularValues[svIndex] > svdCutoff)
         	{
         	  firstComponentIndex = i;
         	  componentCount++;
