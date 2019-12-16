@@ -107,6 +107,7 @@ public:
     this->JPVT.clear();
     RCOND = 10.0*numLimits.epsilon();
     RANK  = 0;
+    this->overwriteExtDataFlag = false;
 	}
 
 
@@ -117,6 +118,7 @@ public:
     this->JPVT = dgelsy.JPVT;
     RCOND      = dgelsy.RCOND;
     RANK       = dgelsy.RANK;
+    this->overwriteExtDataFlag = dgelsy.overwriteExtDataFlag;
 	}
 
     long getRank()
@@ -125,21 +127,24 @@ public:
     }
 
 
-	vector<double> qrSolve(const vector<double> B, const LapackMatrix& A, double rcondCutoff = -1.0)
+
+
+	vector<double> qrSolve(const vector<double>& B, const LapackMatrix& A, double rcondCutoff = -1.0)
 	{
 	    if(rcondCutoff < 0) {RCOND = 10.0*numLimits.epsilon();}
 	    else                {RCOND = rcondCutoff;}
 
-		// Copy A, since A is overwritten or destroyed by
-	    // the routine.
-
-		if(not equalMatrixDimensions(this->A,A))
-		{
-		this->A.initialize(A);
-		}
-		else
-		{
-		this->A = A;
+        if(not this->overwriteExtDataFlag)
+        {
+		// Copy A, since A is overwritten or destroyed by the routine.
+        	if(not equalMatrixDimensions(this->A,A))
+        	{
+        		this->A.initialize(A);
+        	}
+        	else
+        	{
+        		this->A = A;
+        	}
 		}
 
 
@@ -206,6 +211,27 @@ public:
 		return qrSolve(B,Ain,rcondCutoff);
 	}
 
+//
+//  In this call, the matrix is passed via a pointer to the
+//  matrix data assumed to be stored with the Fortran convention
+//  by columns.
+//
+//  !!! Important: the input matrix data is overwritten during the
+//  solution process. There is no bounds checking performed on
+//  the input matrix.
+//
+//  This routine is added to avoid the need for extraneous copying
+//  of input matrix data.
+//
+    vector<double> qrSolve(const vector<double>& B, long Arows, long Acols, double* Adata, double rcondCutoff = -1.0)
+    {
+        this->overwriteExtDataFlag = true;
+    	this->A.initialize(Arows,Acols,Adata);
+    	vector<double> X = qrSolve(B,this->A,rcondCutoff);
+    	this->overwriteExtDataFlag = false;
+    	return X;
+    }
+
 	bool equalMatrixDimensions(const LapackMatrix& A, const LapackMatrix& B)
 	{
 		if((A.rows != B.rows)||(A.cols != B.cols)) return false;
@@ -223,9 +249,9 @@ public:
 	vector<double>      WORK;
 
 	numeric_limits<double>   numLimits;
+
+    bool overwriteExtDataFlag;
 };
-
-
 /*
 *> DGESVD computes the singular value decomposition (SVD) of a real
 *> M-by-N matrix A, optionally computing the left and/or right singular
@@ -271,6 +297,7 @@ public:
 
     this->VT.initialize();
     this->svdDim = 0;
+    this->overwriteExtDataFlag = false;
 	}
 
 	void initialize(const DGESVD& dgesvd)
@@ -278,31 +305,34 @@ public:
 	this->A = dgesvd.A;
     this->U = dgesvd.U;
 
-    this->singularValues = dgesvd.singularValues;
-    this->VT             = dgesvd.VT;
-    this->svdDim         = dgesvd.svdDim;
+    this->singularValues       = dgesvd.singularValues;
+    this->VT                   = dgesvd.VT;
+    this->svdDim               = dgesvd.svdDim;
+    this->overwriteExtDataFlag = dgesvd.overwriteExtDataFlag;
 	}
 
 
-	bool equalMatrixDimensions(const LapackMatrix& A, const LapackMatrix& B)
+	bool equalMatrixDimensions(const SCC::LapackMatrix& A, const SCC::LapackMatrix& B)
 	{
 		if((A.rows != B.rows)||(A.cols != B.cols)) return false;
 		return true;
 	}
 
-	void computeSVD(const LapackMatrix& A)
+	void computeSVD(const SCC::LapackMatrix& A)
 	{
-		// Copy A, since A is overwritten or destroyed by
-	    // the routine.
 
+        if(not this->overwriteExtDataFlag)
+        {
+        	// Copy A, since A is overwritten or destroyed by the routine.
 
-		if(not equalMatrixDimensions(this->A,A))
-		{
-		this->A.initialize(A);
-		}
-		else
-		{
-		this->A = A;
+        	if(not equalMatrixDimensions(this->A,A))
+        	{
+        		this->A.initialize(A);
+        	}
+        	else
+        	{
+        		this->A = A;
+        	}
 		}
 
 
@@ -355,19 +385,40 @@ public:
         }
 	}
 
-	void computeThinSVD(const LapackMatrix& A)
+//
+//  In this call, the matrix is passed via a pointer to the
+//  matrix data assumed to be stored with the Fortran convention
+//  by columns.
+//
+//  !!! Important: the input matrix data is overwritten during the
+//  solution process. There is no bounds checking performed on
+//  the input matrix.
+//
+//  This routine is added to avoid the need for extraneous copying
+//  of input matrix data.
+//
+    void computeSVD(long Arows, long Acols, double* Adata)
+    {
+        this->overwriteExtDataFlag = true;
+    	this->A.initialize(Arows,Acols,Adata);
+    	computeSVD(this->A);
+    	this->overwriteExtDataFlag = false;
+    }
+
+	void computeThinSVD(const SCC::LapackMatrix& A)
 	{
-		// Copy A, since A is overwritten or destroyed by
-	    // the routine.
+        if(not this->overwriteExtDataFlag)
+        {
+            // Copy A, so that input A is not overwritten or destroyed by the routine.
 
-
-		if(not equalMatrixDimensions(this->A,A))
-		{
-		this->A.initialize(A);
-		}
-		else
-		{
-		this->A = A;
+        	if(not equalMatrixDimensions(this->A,A))
+        	{
+        		this->A.initialize(A);
+        	}
+        	else
+        	{
+        		this->A = A;
+        	}
 		}
 
 
@@ -420,6 +471,26 @@ public:
         }
 	}
 
+//
+//  In this call, the matrix is passed via a pointer to the
+//  matrix data assumed to be stored with the Fortran convention
+//  by columns.
+//
+//  !!! Important: the input matrix data is overwritten during the
+//  solution process. There is no bounds checking performed on
+//  the input matrix.
+//
+//  This routine is added to avoid the need for extraneous copying
+//  of input matrix data.
+//
+    void computeThinSVD(long Arows, long Acols, double* Adata)
+    {
+        this->overwriteExtDataFlag = true;
+    	this->A.initialize(Arows,Acols,Adata);
+    	computeThinSVD(this->A);
+    	this->overwriteExtDataFlag = false;
+    }
+
 	long getSVDdim(){return svdDim;}
 
 	vector<double> applyPseudoInverse(vector<double>& b, double svdCutoff = -1.0)
@@ -469,7 +540,7 @@ public:
 			xStar[i] /= singularValues[i];
 		}
 
-		LapackMatrix Vstar;
+		SCC::LapackMatrix Vstar;
 
 	    /*
 	    Vstar = VT.getRowSlice(0,svdDim-1);
@@ -512,12 +583,12 @@ public:
 		return x;
 	}
 
-    LapackMatrix     A;
-    LapackMatrix     U;
+    SCC::LapackMatrix     A;
+    SCC::LapackMatrix     U;
 
     vector<double> singularValues;
 
-    LapackMatrix           VT;
+    SCC::LapackMatrix     VT;
 
 	char                JOBU;
 	char               JOBVT;
@@ -525,9 +596,10 @@ public:
 	vector<double>      WORK;
 
 	long               svdDim;
-
-
+	bool overwriteExtDataFlag;
 };
+
+
 
 /*
    Upon construction or initialization with an input LapackMatrix instance A
@@ -928,7 +1000,7 @@ public:
 // expected to have single precision accuracy for the same reasons.
 //
 // In the implementation below, the solution components are only accumulated
-// when the singular values are greater than the max(svdCutoff,1.0e-07).
+// when the singular values are greater than the max(svdCutoff).
 //
 // When M < N, so the solution is underdetermined, the minimum L2
 // norm solution is returned and only M approximate singular
@@ -1017,7 +1089,7 @@ public:
         for(long i= N-1; i >= stopIndex; i--)
         {
         	singularValues[svIndex] = sqrt(abs(eigenValues[i]));
-        	if((singularValues[svIndex] > svdCutoff) && (singularValues[svIndex] > 1.0e-7))
+        	if(singularValues[svIndex] > svdCutoff)
         	{
         	  firstComponentIndex = i;
         	  componentCount++;
