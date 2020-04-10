@@ -25,7 +25,6 @@ extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Apt
 #include <iostream>
 #include <cmath>
 #include <iomanip>
-using namespace std;
 /**
  *  A minimal matrix class that facilitates the invocation of LAPACK
  *  routines. This class
@@ -379,7 +378,7 @@ public:
 
     }
 
-    void setDiagonal(vector<double>& diag)
+    void setDiagonal(std::vector<double>& diag)
     {
     	long kMax = (rows < cols) ? rows : cols;
     	kMax      = ((long)diag.size() < kMax) ? diag.size() : kMax;
@@ -417,9 +416,9 @@ LapackMatrix operator*(const LapackMatrix& B) const
 }
 
 
-vector<double> operator*(vector<double>& x)
+std::vector<double> operator*(std::vector<double>& x)
 {
-	vector<double> y(rows,0.0);
+	std::vector<double> y(rows,0.0);
 
     char TRANS     = 'N';
     double ALPHA   = 1.0;
@@ -431,9 +430,9 @@ vector<double> operator*(vector<double>& x)
 	return y;
 }
 
-vector<double> applyTranspose(vector<double>& x)
+std::vector<double> applyTranspose(std::vector<double>& x)
 {
-	vector<double> y(cols,0.0);
+	std::vector<double> y(cols,0.0);
 
     char TRANS     = 'T';
     double ALPHA   = 1.0;
@@ -466,23 +465,23 @@ double normFrobenius() const
     {
     		valSum += dataPtr[i]*dataPtr[i];
     }
-    return sqrt(valSum);
+    return std::sqrt(valSum);
 }
 
 double elementMaxAbs() const
 {
     if(rows*cols == 0) return 0.0;
-	double val = abs(dataPtr[0]);
+	double val = std::abs(dataPtr[0]);
     for(long i = 0; i < rows*cols; i++)
     {
-    		val = (val > abs(dataPtr[i])) ? val : abs(dataPtr[i]);
+    		val = (val > std::abs(dataPtr[i])) ? val : std::abs(dataPtr[i]);
     }
     return val;
 }
 
-vector<double> getColumn(long colIndex)
+std::vector<double> getColumn(long colIndex)
 {
-	vector<double> r(rows,0.0);
+	std::vector<double> r(rows,0.0);
 	for(long i = 0; i < rows; i++)
 	{
 	r[i]=operator()(i,colIndex);
@@ -490,7 +489,7 @@ vector<double> getColumn(long colIndex)
 	return r;
 }
 
-void insertColumn(vector<double> colVals, long colIndex)
+void insertColumn(std::vector<double> colVals, long colIndex)
 {
 	for(long i = 0; i < rows; i++)
 	{
@@ -553,7 +552,7 @@ friend ostream& operator<<(ostream& outStream, const LapackMatrix&  V)
         {
           outStream <<   std::scientific << setprecision(3) <<  std::right << setw(10) << V(i,j) << " ";
         }
-        outStream << endl;
+        outStream << std::endl;
         }
         return outStream;
 }
@@ -586,8 +585,8 @@ bool getExternalDataFlag() const
         {
         if((i < begin)||(i  > end))
         {
-        cerr << "LapackMatrix index " << coordinate << " out of bounds " << endl;
-        cerr << "Offending index value : " << i << " Acceptable Range [" << begin << "," << end << "] " << endl;
+        std::cerr << "LapackMatrix index " << coordinate << " out of bounds " << std::endl;
+        std::cerr << "Offending index value : " << i << " Acceptable Range [" << begin << "," << end << "] " << std::endl;
         return false;
         }
         return true;
@@ -601,7 +600,7 @@ bool getExternalDataFlag() const
     {
     if(size1 != size2)
     {
-    cerr << "LapackMatrix sizes are incompatible : " << size1 << " != " << size2 << " ";
+    std::cerr << "LapackMatrix sizes are incompatible : " << size1 << " != " << size2 << " ";
     return false;
     }
     return true;
@@ -611,7 +610,7 @@ bool getExternalDataFlag() const
     {
     if(size1 != size2)
     {
-    cerr << "LapackMatrix sizes are incompatible : " << size1 << " != " << size2 << " ";
+    std::cerr << "LapackMatrix sizes are incompatible : " << size1 << " != " << size2 << " ";
     return false;
     }
     return true;

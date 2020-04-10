@@ -8,11 +8,11 @@
 // to be used with instances of LapackMatrix.
 //
 // Author          : Chris Anderson
-// Version         : July, 27, 2018
+// Version         : July, 27, 2020
 /*
 #############################################################################
 #
-# Copyright  2015-2018 Chris Anderson
+# Copyright  2015-2020 Chris Anderson
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the Lesser GNU General Public License as published by
@@ -39,7 +39,7 @@
 #include <limits>
 #include <cstring>
 #include <stdexcept>
-using namespace std;
+
 
 #ifndef  _LAPACKMATRIXROUTINES_
 #define  _LAPACKMATRIXROUTINES_
@@ -187,7 +187,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "DGELSY  Failed : INFO = " << INFO  << endl;
+        std::cerr << "DGELSY  Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 
@@ -380,7 +380,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "DGESVD  Failed : INFO = " << INFO  << endl;
+        std::cerr << "DGESVD  Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 	}
@@ -466,7 +466,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "THIN DGESVD  Failed : INFO = " << INFO  << endl;
+        std::cerr << "THIN DGESVD  Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 	}
@@ -681,7 +681,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "dsyev  Failed : INFO = " << INFO  << endl;
+        std::cerr << "dsyev  Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 
@@ -744,7 +744,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "dsyev  Failed : INFO = " << INFO  << endl;
+        std::cerr << "dsyev  Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 	}
@@ -856,7 +856,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "dgesvx  Failed : INFO = " << INFO  << endl;
+        std::cerr << "dgesvx  Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 	}
@@ -982,7 +982,7 @@ public:
 
 		if(INFO != 0)
         {
-        cerr << "dposv Failed : INFO = " << INFO  << endl;
+        std::cerr << "dposv Failed : INFO = " << INFO  << std::endl;
         exit(1);
         }
 	}
@@ -1088,7 +1088,7 @@ public:
         long componentCount      = 0;
         for(long i= N-1; i >= stopIndex; i--)
         {
-        	singularValues[svIndex] = sqrt(abs(eigenValues[i]));
+        	singularValues[svIndex] = std::sqrt(std::abs(eigenValues[i]));
         	if(singularValues[svIndex] > svdCutoff)
         	{
         	  firstComponentIndex = i;
@@ -1098,10 +1098,10 @@ public:
         }
 
         /*
-		cout << std::setprecision(15) << endl;
+		std::cout << std::setprecision(15) << std::endl;
         for(long i = 0; i < eigenValues.size(); i++)
         {
-        	cout << sqrt(abs(eigenValues[i])) <<  " " << abs(eigenValues[i]) << endl;
+        	std::cout << std::sqrt(std::abs(eigenValues[i])) <<  " " << abs(eigenValues[i]) << std::endl;
         }
         */
 
@@ -1136,7 +1136,7 @@ public:
 
         for(long i= N-1; i >= firstComponentIndex; i--)
         {
-            bStar[i] /= abs(eigenValues[i]);
+            bStar[i] /= std::abs(eigenValues[i]);
         }
 
         // Zero out entries in case M < N
@@ -1250,8 +1250,8 @@ class QRutility
     try {if(QRfactors.getRowDimension() != (long)b.size()) {throw std::runtime_error("createQRsolution");}}
     catch (std::runtime_error& e)
     {
-     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
-     cerr << "createSolution called be fore createQRfactors " << endl;
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "createSolution called be fore createQRfactors " << std::endl;
      exit(1);
     }
 
@@ -1293,8 +1293,8 @@ class QRutility
     try {if(INFO != 0) {throw std::runtime_error("createQRsolution");}}
     catch (std::runtime_error& e)
     {
-     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
-     cerr << "DORMQR Failed : INFO = " << INFO  << endl;
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "DORMQR Failed : INFO = " << INFO  << std::endl;
      exit(1);
     }
 
@@ -1316,8 +1316,8 @@ class QRutility
     try {if(INFO != 0) {throw std::runtime_error("createQRsolution");}}
     catch (std::runtime_error& e)
     {
-     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
-     cerr << "DTRTRS detected singular matrix : INFO = " << INFO  << endl;
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "DTRTRS detected singular matrix : INFO = " << INFO  << std::endl;
      exit(1);
     }
 
@@ -1353,9 +1353,9 @@ class QRutility
     }
     catch (std::runtime_error& e)
     {
-     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
-     cerr << "Input matrix rows < cols " << '\n';
-     cerr << "rows : " << M << " cols : " << N << endl;
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "Input matrix rows < cols " << '\n';
+     std::cerr << "rows : " << M << " cols : " << N << std::endl;
      exit(1);
     }
 
@@ -1388,8 +1388,8 @@ class QRutility
     try {if(INFO != 0) {throw std::runtime_error("createQRfactors");}}
     catch (std::runtime_error& e)
     {
-     cerr << "Runtime exception in QRutility member function " <<  e.what() << endl;
-     cerr << "DGEQRF Failed : INFO = " << INFO  << endl;
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "DGEQRF Failed : INFO = " << INFO  << std::endl;
      exit(1);
     }
 

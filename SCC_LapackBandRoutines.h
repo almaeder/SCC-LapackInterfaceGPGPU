@@ -36,7 +36,6 @@ extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, 
 #include <vector>
 #include <iostream>
 #include <cstring>
-using namespace std;
 
 #include "SCC_LapackBandMatrix.h"
 
@@ -95,7 +94,7 @@ class DGBSVX
 	EQUED = T;
 	}
 
-	void applyInverse(SCC::LapackBandMatrix& S, vector<double>& f)
+	void applyInverse(SCC::LapackBandMatrix& S, std::vector<double>& f)
 	{
 	applyInverse(S,&f[0]);
 	}
@@ -117,16 +116,16 @@ class DGBSVX
 
 
     SCC::LapackMatrix AFB(LDAFB,N);
-    vector<long>      IPIV(N);
+    std::vector<long>      IPIV(N);
 
 
-    vector<double> R(N);
-    vector<double> C(N);
+    std::vector<double> R(N);
+    std::vector<double> C(N);
 
     double* Bptr = &f[0];
     long LDB     = N;
 
-    vector<double> X(N); // Now an output argument
+    std::vector<double> X(N); // Now an output argument
 
     long LDX     = N;
 
@@ -134,8 +133,8 @@ class DGBSVX
     //double FERR;
     //double BERR;
 
-    vector<double> WORK(3*N);
-    vector<long>    IWORK(N);
+    std::vector<double> WORK(3*N);
+    std::vector<long>    IWORK(N);
 
     long INFO = 0;
 
@@ -147,8 +146,8 @@ class DGBSVX
 
     if(INFO != 0)
     {
-    	if(INFO < 0) { cout << -INFO << "argument to dgbsvx had an illegal value " << endl;}
-    	if(INFO > 0) { cout <<  "Error in dgbsvs INFO = " << INFO << " " << " N " << N << endl;}
+    	if(INFO < 0) { std::cout << -INFO << "argument to dgbsvx had an illegal value " << std::endl;}
+    	if(INFO > 0) { std::cout <<  "Error in dgbsvs INFO = " << INFO << " " << " N " << N << std::endl;}
     }
 
     // Capture the solution
