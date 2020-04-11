@@ -150,11 +150,11 @@ class LapackBandMatrix
 	    long b = (j+kl < N-1) ?  j + kl : N-1;
 	    if((i< a) || (i > b))
 	    {
-	    cerr  <<  "Band matrix storage error " << endl;
-	    cerr  <<  "kl =  " << kl  <<  endl;
-	    cerr  <<  "ku =  " << ku  <<  endl;
-	    cerr  <<  "N  =  " << N   <<  endl;
-	    cerr  <<  "Offending indices " << "(" << i << ", " << j << ")" << endl;
+	    std::cerr  <<  "Band matrix storage error " << std::endl;
+	    std::cerr  <<  "kl =  " << kl  <<  std::endl;
+	    std::cerr  <<  "ku =  " << ku  <<  std::endl;
+	    std::cerr  <<  "N  =  " << N   <<  std::endl;
+	    std::cerr  <<  "Offending indices " << "(" << i << ", " << j << ")" << std::endl;
 	    return false;
 	    }
 	    return true;

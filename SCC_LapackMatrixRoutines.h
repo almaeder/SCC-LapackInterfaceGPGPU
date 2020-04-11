@@ -129,7 +129,7 @@ public:
 
 
 
-	vector<double> qrSolve(const vector<double>& B, const LapackMatrix& A, double rcondCutoff = -1.0)
+	std::vector<double> qrSolve(const std::vector<double>& B, const LapackMatrix& A, double rcondCutoff = -1.0)
 	{
 	    if(rcondCutoff < 0) {RCOND = 10.0*numLimits.epsilon();}
 	    else                {RCOND = rcondCutoff;}
@@ -203,10 +203,10 @@ public:
     // data of size of the number of rows of A. No bounds checking is performed.
     //
 
-	vector<double> qrSolve(double* Bptr, const LapackMatrix& Ain, double rcondCutoff = -1.0)
+	std::vector<double> qrSolve(double* Bptr, const LapackMatrix& Ain, double rcondCutoff = -1.0)
 	{
 		long M     = Ain.getRowDimension();
-		vector<double>                 B(M);
+		std::vector<double>                 B(M);
 		std::memcpy(B.data(),Bptr,M*sizeof(double));
 		return qrSolve(B,Ain,rcondCutoff);
 	}
@@ -223,11 +223,11 @@ public:
 //  This routine is added to avoid the need for extraneous copying
 //  of input matrix data.
 //
-    vector<double> qrSolve(const vector<double>& B, long Arows, long Acols, double* Adata, double rcondCutoff = -1.0)
+    std::vector<double> qrSolve(const std::vector<double>& B, long Arows, long Acols, double* Adata, double rcondCutoff = -1.0)
     {
         this->overwriteExtDataFlag = true;
     	this->A.initialize(Arows,Acols,Adata);
-    	vector<double> X = qrSolve(B,this->A,rcondCutoff);
+    	std::vector<double> X = qrSolve(B,this->A,rcondCutoff);
     	this->overwriteExtDataFlag = false;
     	return X;
     }
@@ -240,15 +240,15 @@ public:
 
 
 	LapackMatrix           A;
-	vector<double>         X;
-    vector<long>        JPVT;
+	std::vector<double>         X;
+    std::vector<long>        JPVT;
     double             RCOND;
     long                RANK;
 
 	long                INFO;
-	vector<double>      WORK;
+	std::vector<double>      WORK;
 
-	numeric_limits<double>   numLimits;
+	std::numeric_limits<double>   numLimits;
 
     bool overwriteExtDataFlag;
 };
@@ -493,10 +493,10 @@ public:
 
 	long getSVDdim(){return svdDim;}
 
-	vector<double> applyPseudoInverse(vector<double>& b, double svdCutoff = -1.0)
+	std::vector<double> applyPseudoInverse(std::vector<double>& b, double svdCutoff = -1.0)
 	{
 
-		vector<double> x(A.cols,0.0);
+		std::vector<double> x(A.cols,0.0);
 
 		svdDim = 0;
 
@@ -515,7 +515,7 @@ public:
 		// Construct pseudo-inverse using components of SVD
 		//
 
-		vector<double> xStar;
+		std::vector<double> xStar;
 
         /*
 		LapackMatrix   Ustar = U.getColSlice(0,svdDim-1);
@@ -586,14 +586,14 @@ public:
     SCC::LapackMatrix     A;
     SCC::LapackMatrix     U;
 
-    vector<double> singularValues;
+    std::vector<double> singularValues;
 
     SCC::LapackMatrix     VT;
 
 	char                JOBU;
 	char               JOBVT;
 	long                INFO;
-	vector<double>      WORK;
+	std::vector<double>      WORK;
 
 	long               svdDim;
 	bool overwriteExtDataFlag;
@@ -645,7 +645,7 @@ public:
 		UPLO = 'U';            // Using upper triangular part of A
 	}
 
-	void computeEigenvalues(const LapackMatrix& A, vector<double>& eigenValues)
+	void computeEigenvalues(const LapackMatrix& A, std::vector<double>& eigenValues)
 	{
 		assert(A.sizeCheck(A.rows,A.cols));
 
@@ -672,7 +672,7 @@ public:
 		dsyev_(&JOBZ,&UPLO,&N, Uptr, &LDA, Wptr, &WORKtmp, &LWORK, &INFO);
 
 		LWORK = (long)(WORKtmp + 100);
-		vector<double>    WORK(LWORK);
+		std::vector<double>    WORK(LWORK);
 		double* WORKptr =    &WORK[0];
 
 		// Second call to create eigensystem
@@ -687,14 +687,14 @@ public:
 
 	}
 
-	void computeEigensystem(const LapackMatrix& A, vector<double>& eigenValues, vector < vector < double> >& eigenVectors)
+	void computeEigensystem(const LapackMatrix& A, std::vector<double>& eigenValues, std::vector < std::vector < double> >& eigenVectors)
 	{
 		assert(A.sizeCheck(A.rows,A.cols));
 		computeEigensystem(A,eigenValues, U);
 
 		// Pack eigenvectors into return argument
 
-		vector <double> eigVector(A.rows);
+		std::vector <double> eigVector(A.rows);
 
 		eigenVectors.resize(A.cols,eigVector);
 
@@ -708,7 +708,7 @@ public:
 
 	}
 
-	void computeEigensystem(const LapackMatrix& A, vector<double>& eigenValues, LapackMatrix& eigenVectors)
+	void computeEigensystem(const LapackMatrix& A, std::vector<double>& eigenValues, LapackMatrix& eigenVectors)
 	{
 		assert(A.sizeCheck(A.rows,A.cols));
 
@@ -735,7 +735,7 @@ public:
 		dsyev_(&JOBZ,&UPLO,&N, Uptr, &LDA, Wptr, &WORKtmp, &LWORK, &INFO);
 
 		LWORK = (long)(WORKtmp + 100);
-		vector<double>    WORK(LWORK);
+		std::vector<double>    WORK(LWORK);
 		double* WORKptr =    &WORK[0];
 
 		// Second call to create eigensystem
@@ -750,7 +750,7 @@ public:
 	}
 
 	LapackMatrix    U;
-	vector<double>  eigValues;
+	std::vector<double>  eigValues;
 	char            JOBZ;
 	char            UPLO;
 
@@ -779,7 +779,7 @@ public:
 	{}
 
 
-    void applyInverse(const LapackMatrix& A,vector <double >& b)
+    void applyInverse(const LapackMatrix& A,std::vector <double >& b)
 	{
 			applyInverse(A,&b[0]);
 	}
@@ -808,18 +808,18 @@ public:
 		long LDA   = N;
 		long LDAF  = N;
 
-		vector <long >   IPIV(N);
+		std::vector <long >   IPIV(N);
 		long* IPIVptr = &IPIV[0];
 
 		char  EQED;
 
-		vector<double>   R(N);
+		std::vector<double>   R(N);
 		double* Rptr  = &R[0];
 
-		vector<double>    C(N);
+		std::vector<double>    C(N);
 		double* Cptr  =  &C[0];
 
-		vector<double>   B(N*NRHS);
+		std::vector<double>   B(N*NRHS);
 		double* Bptr  =      &B[0];
 	    long LDB      =          N;
 
@@ -833,10 +833,10 @@ public:
 		FERR.resize(NRHS);
 		BERR.resize(NRHS);
 
-		vector<double>   WORK(4*N);
+		std::vector<double>   WORK(4*N);
 		double* WORKptr = &WORK[0];
 
-		vector<long>       IWORK(N);
+		std::vector<long>       IWORK(N);
 		long* IWORKptr  = &IWORK[0];
 
 		long   INFO = 0;
@@ -892,7 +892,7 @@ public:
 		return FERR[0];
 	}
 
-	vector<double> getMultipleSolutionErrorEst()
+	std::vector<double> getMultipleSolutionErrorEst()
 	{
 		return FERR;
 	}
@@ -908,7 +908,7 @@ public:
 		return BERR[0];
 	}
 
-	vector<double> getMultipleSolutionBackwardErrorEst()
+	std::vector<double> getMultipleSolutionBackwardErrorEst()
 	{
 		return BERR;
 	}
@@ -916,8 +916,8 @@ public:
 
 
     double         RCOND;
-	vector<double>  FERR;
-	vector<double>  BERR;
+	std::vector<double>  FERR;
+	std::vector<double>  BERR;
 
 	LapackMatrix       A;
 	LapackMatrix      AF;
@@ -954,7 +954,7 @@ public:
 	{}
 
 
-    void applyInverse(const LapackMatrix& A,vector <double >& b)
+    void applyInverse(const LapackMatrix& A,std::vector <double >& b)
 	{
 			applyInverse(A,&b[0]);
 	}
@@ -1026,7 +1026,7 @@ public:
 	// When A is M x N and M < N, then only M singular values are evaluated.
 	//
 	//
-	vector<double> computeNormalEquationSolution(vector<double>& b, LapackMatrix& AB, double svdCutoff)
+	std::vector<double> computeNormalEquationSolution(std::vector<double>& b, LapackMatrix& AB, double svdCutoff)
 	{
 		// Form right hand side
 
@@ -1037,7 +1037,7 @@ public:
 		long M = AB.getRowDimension();
 		long N = AB.getColDimension();
 
-		vector<double> x(N,0.0);
+		std::vector<double> x(N,0.0);
 
 		ABnormal.initialize(N,N);
 
@@ -1174,15 +1174,15 @@ public:
 
 	}
 
-	vector<double>          bStar;
-	vector<double>           bBar;
+	std::vector<double>          bStar;
+	std::vector<double>           bBar;
 	LapackMatrix          ABnormal;
 
 	DSYEV             diagonalizer;
-	vector<double>    eigenValues;
+	std::vector<double>    eigenValues;
 	LapackMatrix      eigenVectors;
 
-	vector<double> singularValues;
+	std::vector<double> singularValues;
 		long               svdDim;
 
 };
@@ -1245,7 +1245,7 @@ class QRutility
     dormqrWorkSize = Q.dormqrWorkSize;
     }
 
-    vector<double> createQRsolution(vector<double>& b)
+    std::vector<double> createQRsolution(std::vector<double>& b)
     {
     try {if(QRfactors.getRowDimension() != (long)b.size()) {throw std::runtime_error("createQRsolution");}}
     catch (std::runtime_error& e)
@@ -1330,10 +1330,10 @@ class QRutility
     // data of size of the number of rows of A. No bounds checking is performed.
     //
 
-	vector<double> createQRsolution(double* Bptr)
+	std::vector<double> createQRsolution(double* Bptr)
 	{
 		long M  = QRfactors.getRowDimension();
-		vector<double>                   B(M);
+		std::vector<double>                   B(M);
 		std::memcpy(B.data(),Bptr,M*sizeof(double));
 		return createQRsolution(B);
 	}
@@ -1401,9 +1401,9 @@ class QRutility
 	}
 
     SCC::LapackMatrix QRfactors; // QR factor component as returned by dgeqrf
-    vector<double>          TAU; // QR factor component as returned by dgeqrf
-    vector<double>         WORK;
-    vector<double>        bTemp;
+    std::vector<double>          TAU; // QR factor component as returned by dgeqrf
+    std::vector<double>         WORK;
+    std::vector<double>        bTemp;
 
     long         dormqrWorkSize;
 };

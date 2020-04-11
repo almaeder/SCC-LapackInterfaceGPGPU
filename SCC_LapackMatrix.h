@@ -542,7 +542,7 @@ LapackMatrix getColSlice(long colStartIndex, long colEndIndex)
 
 /*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
 
-friend ostream& operator<<(ostream& outStream, const LapackMatrix&  V)
+friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
 {
         long i; long j;
 
@@ -550,7 +550,7 @@ friend ostream& operator<<(ostream& outStream, const LapackMatrix&  V)
         {
         for(j = 0; j <  V.cols; j++)
         {
-          outStream <<   std::scientific << setprecision(3) <<  std::right << setw(10) << V(i,j) << " ";
+          outStream <<   std::scientific << std::setprecision(3) <<  std::right << std::setw(10) << V(i,j) << " ";
         }
         outStream << std::endl;
         }
