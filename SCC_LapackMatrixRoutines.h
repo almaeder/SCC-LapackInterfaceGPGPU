@@ -1101,7 +1101,7 @@ public:
 		std::cout << std::setprecision(15) << std::endl;
         for(long i = 0; i < eigenValues.size(); i++)
         {
-        	std::cout << std::sqrt(std::abs(eigenValues[i])) <<  " " << abs(eigenValues[i]) << std::endl;
+        	std::cout << std::sqrt(std::abs(eigenValues[i])) <<  " " << std::abs(eigenValues[i]) << std::endl;
         }
         */
 
