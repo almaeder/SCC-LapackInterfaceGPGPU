@@ -2,7 +2,9 @@
 #ifdef  _DEBUG
 #include <cstdio>
 #else
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #endif
 
 
