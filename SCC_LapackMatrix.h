@@ -383,7 +383,7 @@ public:
     void setDiagonal(std::vector<double>& diag)
     {
     	long kMax = (rows < cols) ? rows : cols;
-    	kMax      = ((long)diag.size() < kMax) ? diag.size() : kMax;
+    	kMax      = ((long)diag.size() < kMax) ? (long)diag.size() : kMax;
     	for(long k = 0; k < kMax; k++)
     	{
     		this->operator()(k,k) = diag[k];

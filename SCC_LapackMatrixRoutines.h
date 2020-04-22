@@ -160,7 +160,7 @@ public:
 
 		long NRHS = 1;
 		long LDA  = M;
-		long LDB  = X.size();
+		long LDB  = (long)X.size();
 
 
 	   // Query to obtain optimal work array size
@@ -500,7 +500,7 @@ public:
 
 		svdDim = 0;
 
-		if(svdCutoff < 0){svdDim = singularValues.size();}
+		if(svdCutoff < 0){svdDim = (long)singularValues.size();}
 		else
 		{
 	    for(long i = 0; i < (long)singularValues.size(); i++)
