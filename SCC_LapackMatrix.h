@@ -7,6 +7,12 @@
 #endif
 #endif
 
+#ifdef _MSC_VER
+#include "iso646.h"          // So "and" is equivalenced to &&
+typedef unsigned int uint;   // Define uint to be unsigned int
+#endif
+
+
 
 #ifndef _LapackMatrix_
 #define _LapackMatrix_
