@@ -69,6 +69,12 @@ extern "C" void dgelsy_(long* M, long* N, long* NRHS, double* APtr,
                         long* LDA, double* BPtr, long* LDB, long* JPVT, double* RCOND,
                         long* RANK, double* WORK, long* LWORK, long* INFO);
 
+
+extern "C" void dgeevx_(char*  BALANC, char* JOBVL, char* JOBVR, char* SENSE,
+                        long*  N, double* A, long* LDA, double* WR, double* WI, double* VL, long* LDVL,
+                        double* VR, long*  	LDVR, long* ILO, long* IHI, double* SCALE, double* ABNRM,
+                        double* RCONDE, double* RCONDV, double* WORK, long* LWORK, long* IWORK, long* INFO);
+
 #endif /* SCC_LAPACKHEADERS_H_ */
 
 
