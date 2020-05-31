@@ -60,8 +60,8 @@
 
 #include "SCC_LapackMatrix.h"
 
-#ifndef _SCC_LapackBandMatrix_
-#define _SCC_LapackBandMatrix_
+#ifndef SCC_LAPACK_BAND_MATRIX_
+#define SCC_LAPACK_BAND_MATRIX_
 
 namespace SCC
 {
@@ -176,4 +176,4 @@ class LapackBandMatrix
 } // Namespace SCC
 
 
-#endif /* _SCC_LapackBandMatrix_  */
+#endif /* SCC_LapackBandMatrix_  */

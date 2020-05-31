@@ -33,8 +33,8 @@
 #############################################################################
 */
 
-#ifndef SCC_LAPACKHEADERS_H_
-#define SCC_LAPACKHEADERS_H_
+#ifndef SCC_LAPACK_HEADERS_
+#define SCC_LAPACK_HEADERS_
 
 extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Aptr,
 long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);

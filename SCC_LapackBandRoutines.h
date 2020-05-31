@@ -39,8 +39,8 @@ extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, 
 
 #include "SCC_LapackBandMatrix.h"
 
-#ifndef _SCC_LapackBandRoutines_
-#define _SCC_LapackBandRoutines_
+#ifndef SCC_LAPACK_BAND_ROUTINES_
+#define SCC_LAPACK_BAND_ROUTINES_
 
 namespace SCC
 {
@@ -201,4 +201,4 @@ class DGBSVX
 
 }
 
-#endif /* _SCC_LapackBandRoutines__ */
+#endif /* SCC_LapackBandRoutines__ */

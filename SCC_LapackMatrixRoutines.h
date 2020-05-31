@@ -41,8 +41,8 @@
 #include <stdexcept>
 
 
-#ifndef  _LAPACKMATRIXROUTINES_
-#define  _LAPACKMATRIXROUTINES_
+#ifndef  SCC_LAPACK_MATRIX_ROUTINES_
+#define  SCC_LAPACK_MATRIX_ROUTINES_
 
 namespace SCC
 {

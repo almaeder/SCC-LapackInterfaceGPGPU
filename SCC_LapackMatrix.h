@@ -14,8 +14,8 @@ typedef unsigned int uint;   // Define uint to be unsigned int
 
 
 
-#ifndef _LapackMatrix_
-#define _LapackMatrix_
+#ifndef SCC_LAPACK_MATRIX_
+#define SCC_LAPACK_MATRIX_
 //
 // Prototypes for the only two LAPACK BLAS routines used by this class
 //
