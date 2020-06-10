@@ -438,6 +438,9 @@ std::vector<double> operator*(std::vector<double>& x)
 	return y;
 }
 
+
+
+
 std::vector<double> applyTranspose(std::vector<double>& x)
 {
 	std::vector<double> y(cols,0.0);
@@ -578,6 +581,26 @@ double* getDataPointer() const
 bool getExternalDataFlag() const
 {
 	return externDataFlag;
+}
+
+//
+//###################################################################
+//  "low level" routines with direct call to Lapack routines
+//            ----> No bounds checking <----
+//###################################################################
+//
+// y = alpha*(*this)*x + beta*y
+//
+
+void dgemv(char trans, double alpha, double*x, double beta, double* y)
+{
+	char TRANS     = trans;
+    double ALPHA   = alpha;
+    double BETA    = beta ;
+    long INCX      = 1;
+    long INCY      = 1;
+
+    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,x,&INCX,&BETA,y,&INCY);
 }
 
 
