@@ -26,12 +26,7 @@
 #############################################################################
 */
 
-// Headers for band matrix routines
 
-extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, long*  	NRHS,
-				double* AB, long* LDAB, double* AFB, long* LDAFB, long* IPIV, char* EQUED,
-				double* R, double* C, double* B, long* LDB, double* X, long* LDX, double* RCOND, double* FERR,
-				double*   BERR, double *WORK, long*	IWORK, long* INFO);
 
 #include <vector>
 #include <iostream>
@@ -41,6 +36,13 @@ extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, 
 
 #ifndef SCC_LAPACK_BAND_ROUTINES_
 #define SCC_LAPACK_BAND_ROUTINES_
+
+// Headers for band matrix routines
+
+extern "C" void dgbsvx_(char* FACT, char* TRANS, long* N, long* KL, long*  	KU, long*  	NRHS,
+				double* AB, long* LDAB, double* AFB, long* LDAFB, long* IPIV, char* EQUED,
+				double* R, double* C, double* B, long* LDB, double* X, long* LDX, double* RCOND, double* FERR,
+				double*   BERR, double *WORK, long*	IWORK, long* INFO);
 
 namespace SCC
 {

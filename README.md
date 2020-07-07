@@ -3,7 +3,7 @@ Classes and prototypes to facilitate directly calling LAPACK routines from C++.
 ### Prerequisites
 C++11
 ### Versioning
-Release : 1.0.7
+Release : 1.0.8
 ### Date
 June 8, 2020
 ### Authors
