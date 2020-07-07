@@ -47,8 +47,6 @@ extern "C" int dstebz_(char *range, char *order, long *n, double
 
 namespace SCC
 {
-
-}
 class TriDiagRoutines
 {
 public:
