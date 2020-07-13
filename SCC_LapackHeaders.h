@@ -78,7 +78,6 @@ extern "C" void dgeevx_(char*  BALANC, char* JOBVL, char* JOBVR, char* SENSE,
 
 extern "C" int dgeev_(char* JOBVL, char* JOBVR, long* N,double* A, long* LDA,double* WR, double* WI, double* VL,
                      long* LDVL, double* VR, long* LDVR, double* WORK, long* LWORK, long* INFO);
-)
 
 
 #endif /* SCC_LAPACKHEADERS_H_ */
