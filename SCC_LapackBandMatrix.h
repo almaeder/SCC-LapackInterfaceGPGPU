@@ -139,7 +139,7 @@ class LapackBandMatrix
 
     void setToValue(double val)
 	{
-		Sp.setToValue(0.0);
+		Sp.setToValue(val);
 	}
 
 
