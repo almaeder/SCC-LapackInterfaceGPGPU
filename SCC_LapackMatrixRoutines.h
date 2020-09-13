@@ -645,6 +645,13 @@ public:
 		UPLO = 'U';            // Using upper triangular part of A
 	}
 
+	void initialize()
+	{
+		U.initialize();
+		eigValues.clear();
+		JOBZ = 'N';
+		UPLO = 'U';            // Using upper triangular part of A
+	}
 	void computeEigenvalues(const LapackMatrix& A, std::vector<double>& eigenValues)
 	{
 		assert(A.sizeCheck(A.rows,A.cols));
@@ -749,7 +756,7 @@ public:
         }
 	}
 
-	LapackMatrix    U;
+	LapackMatrix                 U;
 	std::vector<double>  eigValues;
 	char            JOBZ;
 	char            UPLO;

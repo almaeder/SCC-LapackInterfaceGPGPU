@@ -3,9 +3,9 @@ Classes and prototypes to facilitate directly calling LAPACK routines from C++.
 ### Prerequisites
 C++11
 ### Versioning
-Release : 1.0.10
+Release : 1.0.11
 ### Date
-July 16, 2020
+Sept. 13, 2020
 ### Authors
 Chris Anderson
 ### License
