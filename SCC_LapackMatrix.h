@@ -386,7 +386,7 @@ public:
 
     }
 
-    void setDiagonal(std::vector<double>& diag)
+    void setDiagonal(const std::vector<double>& diag)
     {
     	long kMax = (rows < cols) ? rows : cols;
     	kMax      = ((long)diag.size() < kMax) ? (long)diag.size() : kMax;
@@ -424,7 +424,7 @@ LapackMatrix operator*(const LapackMatrix& B) const
 }
 
 
-std::vector<double> operator*(std::vector<double>& x)
+std::vector<double> operator*(const std::vector<double>& x)
 {
 	std::vector<double> y(rows,0.0);
 
@@ -434,14 +434,14 @@ std::vector<double> operator*(std::vector<double>& x)
     long INCX      = 1;
     long INCY      = 1;
 
-    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,&x[0],&INCX,&BETA,&y[0],&INCY);
+    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
 	return y;
 }
 
 
 
 
-std::vector<double> applyTranspose(std::vector<double>& x)
+std::vector<double> applyTranspose(const std::vector<double>& x)
 {
 	std::vector<double> y(cols,0.0);
 
@@ -451,7 +451,7 @@ std::vector<double> applyTranspose(std::vector<double>& x)
     long INCX      = 1;
     long INCY      = 1;
 
-    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,&x[0],&INCX,&BETA,&y[0],&INCY);
+    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
 	return y;
 }
 
@@ -500,7 +500,7 @@ std::vector<double> getColumn(long colIndex)
 	return r;
 }
 
-void insertColumn(std::vector<double> colVals, long colIndex)
+void insertColumn(const std::vector<double> colVals, long colIndex)
 {
 	for(long i = 0; i < rows; i++)
 	{
