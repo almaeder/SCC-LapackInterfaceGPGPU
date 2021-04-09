@@ -36,6 +36,8 @@
 #ifndef SCC_LAPACK_HEADERS_
 #define SCC_LAPACK_HEADERS_
 
+extern "C" double dlamch_(char* CMACH);
+
 extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Aptr,
 long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
 
