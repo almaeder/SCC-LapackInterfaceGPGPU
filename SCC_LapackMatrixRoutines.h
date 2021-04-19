@@ -703,6 +703,7 @@ public:
 
 		std::vector <double> eigVector(A.rows);
 
+		eigenVectors.clear();
 		eigenVectors.resize(A.cols,eigVector);
 
 		for(long j = 0; j < A.cols; j++)
@@ -715,6 +716,7 @@ public:
 
 	}
 
+   
 	void computeEigensystem(const LapackMatrix& A, std::vector<double>& eigenValues, LapackMatrix& eigenVectors)
 	{
 		assert(A.sizeCheck(A.rows,A.cols));
