@@ -151,6 +151,7 @@ class DGBSVX
 	applyInverse(f);
 	return;
 
+    /*
     //char FACT  = 'E'; // E Or N for no-equilibration
 
     char TRANS = 'N';
@@ -205,6 +206,7 @@ class DGBSVX
     // f = X;
 
     std::memcpy(&f[0],&X[0],N*sizeof(double));
+    */
 	}
 
 
