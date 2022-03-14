@@ -276,6 +276,76 @@ public:
 
 
 #endif
+//
+// Convenience access for single column or row matrices, e.g.
+// matrices initialized with (N,1) or (1,N).
+//
+// Indexing starts at 0;
+//
+//
+#ifdef _DEBUG
+    double&  operator()(long i)
+    {
+    assert(singleRowOrColCheck());
+
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    assert(boundsCheck(i1, 0, rows-1,1));
+    assert(boundsCheck(i2, 0, cols-1,2));
+
+    return *(dataPtr +  i1 + i2*rows);
+    };
+
+    const double&  operator()(long i) const
+    {
+    assert(singleRowOrColCheck());
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    assert(boundsCheck(i1, 0, rows-1,1));
+    assert(boundsCheck(i2, 0, cols-1,2));
+    return *(dataPtr +   i1  + i2*rows);
+    };
+#else
+
+    /*!
+    Returns a reference to the element with index (i) in a LapackMatrix
+    with a single row or column.
+    Indexing starting at (0)
+    */
+    inline double&  operator()(long i)
+    {
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    return *(dataPtr +  i1 + i2*rows);
+    };
+
+    /*!
+    Returns a reference to the element with index (i) in a LapackMatrix
+    with a single row or column.
+    Indexing starting at (0)
+     */
+    inline const double&  operator()(long i) const
+    {
+
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    return *(dataPtr +   i1  + i2*rows);
+    };
+
+
+#endif
 
 
     inline void operator=(const LapackMatrix& B)
@@ -624,6 +694,21 @@ void dgemv(char trans, double alpha, double*x, double beta, double* y)
         }
 #else
         bool boundsCheck(long, long, long,int) const {return true;}
+#endif
+
+#ifdef _DEBUG
+        bool singleRowOrColCheck() const
+        {
+        if((rows != 1)&&(cols != 1))
+        {
+        std::cerr << "LapackMatrix Error: Use of single index access"  << std::endl;
+        std::cerr << "for LapackMatrix that is not a single row or column" << std::endl;
+        return false;
+        }
+        return true;
+        }
+#else
+        bool singleRowOrColCheck() const {return true;}
 #endif
 
 #ifdef _DEBUG
