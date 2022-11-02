@@ -253,7 +253,7 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
 
     std::vector<double>     eValsReturn;
 
-    if(mFound ==  0) return eValsReturn;
+    if(mFound ==  0) {return eValsReturn;}
 
     eValsReturn.resize(mFound);
 
