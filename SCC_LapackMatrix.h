@@ -466,6 +466,31 @@ public:
     	}
     }
 
+    void scaleRows(const std::vector<double>& rowScaleFactors)
+    {
+    	assert(sizeCheck(this->rows,(long)rowScaleFactors.size()));
+    	for(long i = 0; i < rows; i++)
+    	{
+    		for(long j = 0; j < cols; j++)
+    		{
+    		this->operator()(i,j) *= rowScaleFactors[i];
+    		}
+    	}
+    }
+
+    void scaleCols(const std::vector<double>& colScaleFactors)
+    {
+    	assert(sizeCheck(this->cols,(long)colScaleFactors.size()));
+    	for(long j = 0; j < cols; j++)
+    	{
+    	for(long i = 0; i < rows; i++)
+    	{
+
+    		this->operator()(i,j) *= colScaleFactors[j];
+    	}}
+    }
+
+
     //  C := alpha*op( A )*op( B ) + beta*C,
 
 LapackMatrix operator*(const LapackMatrix& B) const
