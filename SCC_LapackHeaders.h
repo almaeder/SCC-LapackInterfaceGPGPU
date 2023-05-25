@@ -41,14 +41,19 @@ extern "C" double dlamch_(char* CMACH);
 extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Aptr,
 long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
 
-extern "C" void dsyev_(char* JOBZ,char* UPLO, long*N, double* Aptr, long* LDA, double* Wptr,
-double* WORKptr, long* LWORK, long* INFO);
-
 
 extern "C" void dgesvx_(char* FACT, char* TRANS, long* N, long* NRHS, double* Aptr, long* LDA, double* AFptr, long* LDAF, long* IPIVptr,
 		                char* EQED, double* Rptr, double* Cptr, double* Bptr, long* LDB, double* Xptr, long* LDX,  double* RCOND,
 						double* FERR, double* BERR, double* WORKptr,
 		                long* IWORKptr, long* INFO);
+
+extern "C"  void dsyevx_(char*JOBZ, char* RANGE, char* UPLO,long* N, double* A, long* LDA, double* VL, double* VU,
+                         long*   IL, long*   IU, double*   ABSTOL, long*   M, double* W, double* Z, long* LDZ,
+                         double* WORK, long * LWORK, long* IWORK, long* IFAIL, long* INFO);
+
+extern "C" void dsyev_(char* JOBZ,char* UPLO, long*N, double* Aptr, long* LDA, double* Wptr,
+double* WORKptr, long* LWORK, long* INFO);
+
 
 extern "C" void dgeqrf_(long* M, long* N, double* Aptr, long* LDA, double* TAU, double* WORK, long* LWORK, long* INFO);
 
@@ -80,7 +85,6 @@ extern "C" void dgeevx_(char*  BALANC, char* JOBVL, char* JOBVR, char* SENSE,
 
 extern "C" int dgeev_(char* JOBVL, char* JOBVR, long* N,double* A, long* LDA,double* WR, double* WI, double* VL,
                      long* LDVL, double* VR, long* LDVR, double* WORK, long* LWORK, long* INFO);
-
 
 #endif /* SCC_LAPACKHEADERS_H_ */
 

@@ -1418,6 +1418,271 @@ class QRutility
 };
 
 
+class DSYEVX
+{
+public :
+
+	DSYEVX()
+	{
+	initialize();
+	}
+
+	void initialize()
+	{
+	A.initialize();
+    WORK.clear();
+    IWORK.clear();
+    IFAIL.clear();
+	}
+
+	// Computes the eigCount algebraically smallest eigenvalues and eigenvectors.
+	// The value returned is the number of eigenvalues found.
+
+	long createAlgSmallestEigensystem(long eigCount, SCC::LapackMatrix& M, std::vector<double>& eigValues,
+			                          SCC::LapackMatrix& eigVectors)
+	{
+    if(M.getRowDimension() != M.getColDimension())
+	{
+			throw std::runtime_error("\nDSYEVX : Non-square matrix input argument  \n");
+	}
+
+    long N = M.getRowDimension();
+
+    if(eigCount > N)
+    {
+    	std::stringstream sout;
+    	sout << "\nDSYEVX Error \n";
+    	sout << "Requested number of eigenvalues/eigenvectors exceeds system dimension. \n";
+    	throw std::runtime_error(sout.str());
+    }
+    // Copy input matrix
+
+    A.initialize(M);
+
+    char JOBZ   = 'V'; // Specify N for eigenvalues only
+    char RANGE  = 'I'; // Specify index range of eigenvalues to be found (A for all, V for interval)
+    char UPLO   = 'U'; // Store complex Hermetian matrix in upper trianglar packed form
+
+    long LDA  = N;
+    double VL = 0;
+    double VU = 0;
+
+    long IL = 1;        // Index of smallest eigenvalue returned
+    long IU = eigCount; // Index of largest  eigenvalue returned
+
+    char   DLAMCH_IN = 'S';
+    double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
+
+    long eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
+
+    eigValues.clear();         // W parameter in original call
+    eigValues.resize(N,0.0);
+
+    long LDZ   = N;
+    long Mstar = (IU-IL) + 1;              // Maximal number of eigenvalues to be computed when using index specification
+
+    eigVectors.initialize(LDZ,Mstar);      // Matrix whose columns containing the eigenvectors (Z in original call)
+
+    long INFO = 0;
+
+    WORK.clear();
+    IWORK.clear();
+    IFAIL.clear();
+
+    // workspace query
+
+    long LWORK = -1;
+    WORK.resize(1,0.0);
+
+    dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
+    eigVectors.getDataPointer(),&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
+
+    LWORK  = (long)WORK[0];
+
+    WORK.resize(LWORK,0.0);
+    IWORK.resize(5*N,0);
+    IFAIL.resize(N,0);
+
+    dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
+    eigVectors.getDataPointer(),&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
+
+    if(INFO != 0)
+    {
+    	std::stringstream sout;
+    	sout << "\nDSYEVX \nError INFO = " << INFO << "\n";
+    	throw std::runtime_error(sout.str());
+    }
+
+    // resize the eig values array to the number of eigenvalues found
+
+    eigValues.resize(eigComputed);
+    return eigComputed;
+	}
+
+
+    // Computes the eigCount algebraically smallest eigenvalues and eigenvectors.
+	// The value returned is the number of eigenvalues found.
+
+	long createEigensystem(SCC::LapackMatrix& M, std::vector<double>& eigValues,
+			               SCC::LapackMatrix& eigVectors)
+	{
+     if(M.getRowDimension() != M.getColDimension())
+	{
+			throw std::runtime_error("\nDSYEVX : Non-square matrix input argument  \n");
+	}
+
+    long N = M.getRowDimension();
+
+    // Copy input matrix
+
+    A.initialize(M);
+
+    char JOBZ   = 'V'; // Specify N for eigenvalues only
+    char RANGE  = 'A'; // Specify index range of eigenvalues to be found (A for all, V for interval)
+    char UPLO   = 'U'; // Store complex Hermetian matrix in upper trianglar packed form
+
+    long LDA  = N;
+    double VL = 0;
+    double VU = 0;
+
+    long IL = 0; // Index of smallest eigenvalue returned
+    long IU = 0; // Index of largest  eigenvalue returned
+
+    char   DLAMCH_IN = 'S';
+    double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
+
+    long eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
+
+    eigValues.clear();         // W parameter in original call
+    eigValues.resize(N,0.0);
+
+    long LDZ     = N;
+    eigVectors.initialize(LDZ,N);      // Matrix whose columns containing the eigenvectors (Z in original call)
+
+    long INFO = 0;
+
+    WORK.clear();
+    IWORK.clear();
+    IFAIL.clear();
+
+    // workspace query
+
+    long LWORK = -1;
+    WORK.resize(1,0.0);
+
+    dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
+    eigVectors.getDataPointer(),&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
+
+    LWORK  = (long)WORK[0];
+
+    WORK.resize(LWORK,0.0);
+    IWORK.resize(5*N,0);
+    IFAIL.resize(N,0);
+
+    dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
+    eigVectors.getDataPointer(),&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
+
+    if(INFO != 0)
+    {
+    	std::stringstream sout;
+    	sout << "\nDSYEVX \nError INFO = " << INFO << "\n";
+    	throw std::runtime_error(sout.str());
+    }
+
+    // resize the eig values array to the number of eigenvalues found
+
+    eigValues.resize(eigComputed);
+    return eigComputed;
+	}
+
+    long createAlgSmallestEigenvalues(long eigCount, SCC::LapackMatrix& M, std::vector<double>& eigValues)
+	{
+        if(M.getRowDimension() != M.getColDimension())
+	{
+			throw std::runtime_error("\nDSYEVX : Non-square matrix input argument  \n");
+	}
+
+    long N = M.getRowDimension();
+
+    if(eigCount > N)
+    {
+    	std::stringstream sout;
+    	sout << "\nDSYEVX Error \n";
+    	sout << "Requested number of eigenvalues/eigenvectors exceeds system dimension. \n";
+    	throw std::runtime_error(sout.str());
+    }
+    // Copy input matrix
+
+    A.initialize(M);
+
+    char JOBZ   = 'N'; // Specify N for eigenvalues only
+    char RANGE  = 'I'; // Specify index range of eigenvalues to be found (A for all, V for interval)
+    char UPLO   = 'U'; // Store complex Hermetian matrix in upper trianglar packed form
+
+    long LDA  = N;
+    double VL = 0;
+    double VU = 0;
+
+    long IL = 1;        // Index of smallest eigenvalue returned
+    long IU = eigCount; // Index of largest  eigenvalue returned
+
+    char   DLAMCH_IN = 'S';
+    double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
+
+    long eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
+
+    eigValues.clear();         // W parameter in original call
+    eigValues.resize(N,0.0);
+
+    long LDZ     = 1;
+    double ZDATA = 0.0;
+
+    long INFO = 0;
+
+    WORK.clear();
+    IWORK.clear();
+    IFAIL.clear();
+
+    // workspace query
+
+    long LWORK = -1;
+    WORK.resize(1,0.0);
+
+    dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
+    &ZDATA,&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
+
+    LWORK  = (long)WORK[0];
+
+    WORK.resize(LWORK,0.0);
+    IWORK.resize(5*N,0);
+    IFAIL.resize(N,0);
+
+    dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
+    &ZDATA,&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
+
+    if(INFO != 0)
+    {
+    	std::stringstream sout;
+    	sout << "\nDSYEVX \nError INFO = " << INFO << "\n";
+    	throw std::runtime_error(sout.str());
+    }
+
+    // resize the eig values array to the number of eigenvalues found
+
+    eigValues.resize(eigComputed);
+    return eigComputed;
+	}
+
+
+	SCC::LapackMatrix             A;
+    std::vector<double>         WORK;
+    std::vector<long>          IWORK;
+    std::vector<long>          IFAIL;
+
+
+};
+
+
 } // End of SCC Namespace declaration
 
 #endif
