@@ -1,5 +1,5 @@
 /*
- * LapackMatrixCmplx16.h
+ * SCC_LapackMatrixCmplx16.h
  *
  *  Modified on: June 1, 2023
  *      Author: anderson

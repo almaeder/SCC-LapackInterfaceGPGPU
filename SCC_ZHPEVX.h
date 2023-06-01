@@ -5,7 +5,7 @@
  *      Author: anderson
  */
 #include "LapackInterface/SCC_LapackHeaders.h"
-#include "LapackMatrixCmplx16.h"
+#include "SCC_LapackMatrixCmplx16.h"
 
 /*
 #############################################################################
@@ -28,8 +28,8 @@
 #############################################################################
 */
 
-#ifndef  ZHPEVX_H_
-#define  ZHPEVX_H_
+#ifndef  SCC_ZHPEVX_H_
+#define  SCC_ZHPEVX_H_
 
 namespace SCC
 {
