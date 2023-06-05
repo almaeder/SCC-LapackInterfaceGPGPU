@@ -436,6 +436,12 @@ public:
     }
 
 
+    bool isNull() const
+    {
+    if((rows == 0)||(cols == 0)) { return true;}
+    return false;
+    }
+
     void setToValue(double val)
     {
       for(long i = 0; i < rows*cols; i++)
