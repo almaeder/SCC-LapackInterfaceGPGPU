@@ -591,7 +591,7 @@ double elementMaxAbs() const
     return val;
 }
 
-std::vector<double> getColumn(long colIndex)
+std::vector<double> getColumn(long colIndex) const
 {
 	std::vector<double> r(rows,0.0);
 	for(long i = 0; i < rows; i++)
