@@ -1334,6 +1334,104 @@ class QRutility
     }
 
 
+    LapackMatrix createQRsolution(const LapackMatrix& B)
+    {
+    try {if(QRfactors.getRowDimension() != (long)B.rows) {throw std::runtime_error("createQRsolution");}}
+    catch (std::runtime_error& e)
+    {
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "createSolution called before createQRfactors " << std::endl;
+     exit(1);
+    }
+
+    LapackMatrix Btmp;
+
+    // Capture right hand side
+
+    Btmp.initialize(B);
+
+    char SIDE    = 'L';
+    char TRANS   = 'T';
+    long M       = Btmp.rows;
+    long NRHS    = Btmp.cols;
+    long K       = QRfactors.getColDimension();
+    long LDA     = QRfactors.getRowDimension();
+    double* Aptr = QRfactors.getDataPointer();
+    long LDC     = M;
+
+    long LWORK  = -1;
+    long INFO   =  0;
+
+    double WORKDIM;
+
+    // Obtain the optimal work size if it has not already
+    // been determined
+
+    if(dormqrWorkSize < 0)
+    {
+    dormqr_(&SIDE, &TRANS, &M, &NRHS, &K,Aptr,& LDA, &TAU[0], Btmp.getDataPointer(),
+    &LDC, &WORKDIM, &LWORK, &INFO);
+
+    dormqrWorkSize = (long)WORKDIM+1;
+    }
+
+    LWORK = dormqrWorkSize;
+    WORK.resize(LWORK);
+
+    dormqr_(&SIDE, &TRANS, &M, &NRHS, &K,Aptr,& LDA, &TAU[0],Btmp.getDataPointer(),
+    &LDC, &WORK[0], &LWORK, &INFO);
+
+    try {if(INFO != 0) {throw std::runtime_error("createQRsolution");}}
+    catch (std::runtime_error& e)
+    {
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "DORMQR Failed : INFO = " << INFO  << std::endl;
+     exit(1);
+    }
+
+    // Note: only using upper QRfactors.cols x QRfactors.cols elements of Btmp.
+
+	// Backsolve upper trignular system to obtain a solution
+
+	char UPLO    = 'U';
+	TRANS        = 'N';
+	char DIAG    = 'N';
+	M            = QRfactors.getColDimension();
+	long N       = M;
+	NRHS         = Btmp.cols;
+	LDA          = QRfactors.getRowDimension();
+	long LDB     = Btmp.rows;
+
+
+	dtrtrs_(&UPLO, &TRANS, &DIAG, &N, &NRHS, Aptr, &LDA,Btmp.getDataPointer(),&LDB,&INFO);
+
+    try {if(INFO != 0) {throw std::runtime_error("createQRsolution");}}
+    catch (std::runtime_error& e)
+    {
+     std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
+     std::cerr << "DTRTRS detected singular matrix : INFO = " << INFO  << std::endl;
+     exit(1);
+    }
+
+    if(Btmp.rows == Btmp.cols)
+    {
+    return Btmp;
+    }
+
+    LapackMatrix Bstar(N,N);
+
+    for(long i = 0; i < N; i++)
+    {
+    for(long j = 0; j < N; j++)
+    {
+    Bstar(i,j) = Btmp(i,j);
+    }}
+
+	return Bstar;
+    }
+
+
+
     //
     // A convenience solve interface. It is assumed that Bptr points to contiguous
     // data of size of the number of rows of A. No bounds checking is performed.
