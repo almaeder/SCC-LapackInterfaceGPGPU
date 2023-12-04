@@ -384,7 +384,7 @@ public:
     	LapackMatrix     C(*this);
     	for(long i = 0; i < rows*cols; i++)
     	{
-    		C.dataPtr[i] = dataPtr[i] +  B.dataPtr[i];
+    		C.dataPtr[i] += B.dataPtr[i];
     	}
         return C;
     }
@@ -397,7 +397,7 @@ public:
     	LapackMatrix     C(*this);
     	for(long i = 0; i < rows*cols; i++)
     	{
-    		C.dataPtr[i] = dataPtr[i] -  B.dataPtr[i];
+    		C.dataPtr[i] -= B.dataPtr[i];
     	}
     	return C;
     }
@@ -432,6 +432,21 @@ public:
     {
     LapackMatrix R(B);
     R *= alpha;
+    return R;
+    }
+
+    inline void operator/=(const double alpha)
+    {
+    for(long i = 0; i < rows*cols; i++)
+    {
+    		dataPtr[i] /= alpha;
+    }
+    }
+
+    LapackMatrix operator/(const double alpha)
+    {
+    LapackMatrix R(*this);
+    R /= alpha;
     return R;
     }
 

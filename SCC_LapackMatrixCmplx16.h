@@ -130,6 +130,29 @@ public:
 		}}
 	}
 
+	void setToValue(double val)
+	{
+	    for(long j = 0; j < cols; j++)
+		{
+		for(long i = 0; i < rows; i++)
+		{
+		mData(2*i,  j) = val;
+		mData(2*i+1,j) = 0.0;
+		}}
+	}
+
+    void setToValue(const std::complex<double>& val)
+	{
+	    for(long j = 0; j < cols; j++)
+		{
+		for(long i = 0; i < rows; i++)
+		{
+		mData(2*i,  j) = val.real();
+		mData(2*i+1,j) = val.imag();
+		}}
+	}
+
+
 	long getRowDimension() const {return rows;}
 	long getColDimension() const {return cols;}
 
@@ -254,6 +277,22 @@ public:
 		}
 	}
 
+    void getRealAndCmplxColumn(long colIndex, LapackMatrix& realCol, LapackMatrix& imagCol)
+	{
+		assert(boundsCheck(colIndex, 0, cols-1,2));
+
+	    realCol.initialize(rows,1);
+		imagCol.initialize(rows,1);
+
+
+	    for(long i = 0; i < rows; i++)
+		{
+		realCol(i,0) = mData(2*i,colIndex);
+		imagCol(i,0) = mData(2*i+1,colIndex);
+		}
+	}
+
+
 	LapackMatrixCmplx16 createUpperTriPacked()
 	{
 		if(rows != cols)
@@ -281,6 +320,159 @@ public:
 
 		return AP;
 	}
+
+//  Algebraic operators
+
+    inline void operator=(const LapackMatrixCmplx16& B)
+	{
+    	if(mData.dataPtr == nullptr)
+    	{
+    		rows    = B.rows;
+    		cols    = B.cols;
+    		mData.initialize(B.mData);
+    	}
+
+        assert(sizeCheck(this->rows,B.rows));
+    	assert(sizeCheck(this->cols,B.cols));
+
+    	mData = B.mData;
+	}
+
+
+    inline void operator+=(const  LapackMatrixCmplx16& B)
+    {
+    	assert(sizeCheck(this->rows,B.rows));
+    	assert(sizeCheck(this->cols,B.cols));
+    	mData += B.mData;
+    }
+
+    LapackMatrixCmplx16 operator+(const LapackMatrixCmplx16& B)
+    {
+    	assert(sizeCheck(this->rows,B.rows));
+    	assert(sizeCheck(this->cols,B.cols));
+
+    	LapackMatrixCmplx16  C(*this);
+
+    	C.mData += B.mData;
+        return C;
+    }
+
+    LapackMatrixCmplx16 operator-(const LapackMatrixCmplx16& B)
+    {
+    	assert(sizeCheck(this->rows,B.rows));
+    	assert(sizeCheck(this->cols,B.cols));
+
+    	LapackMatrixCmplx16  C(*this);
+
+    	C.mData -= B.mData;
+    	return C;
+    }
+
+    inline void operator-=(const  LapackMatrixCmplx16& D)
+    {
+      assert(sizeCheck(this->rows,D.rows));
+      assert(sizeCheck(this->cols,D.cols));
+
+      mData -= D.mData;
+    }
+
+    inline void operator*=(const double alpha)
+    {
+    		mData *= alpha;
+    }
+
+    inline void operator*=(const std::complex<double> alpha)
+    {
+            double cReal; double cImag;
+            double aReal = alpha.real();
+            double aImag = alpha.imag();
+
+            for(long i = 0; i < rows; i++)
+            {
+            for(long j = 0; j < cols; j++)
+            {
+            cReal          = mData(2*i,j);
+		    cImag          = mData(2*i+1,j);
+		    mData(2*i,j)   = cReal*aReal - cImag*aImag;
+		    mData(2*i+1,j) = cReal*aImag + cImag*aReal;
+            }}
+    }
+
+    LapackMatrixCmplx16 operator*(const double alpha)
+    {
+    LapackMatrixCmplx16 R(*this);
+    R *= alpha;
+    return R;
+    }
+
+    LapackMatrixCmplx16 operator*(const std::complex<double> alpha)
+    {
+    LapackMatrixCmplx16 R(*this);
+    R *= alpha;
+    return R;
+    }
+
+
+    friend LapackMatrixCmplx16 operator*(const double alpha, const LapackMatrixCmplx16& B)
+    {
+    LapackMatrixCmplx16 R(B);
+    R *= alpha;
+    return R;
+    }
+
+    friend LapackMatrixCmplx16 operator*(const std::complex<double> alpha, const LapackMatrixCmplx16& B)
+    {
+    LapackMatrixCmplx16 R(B);
+    R *= alpha;
+    return R;
+    }
+
+
+    inline void operator/=(const double alpha)
+    {
+    		mData /= alpha;
+    }
+
+    inline void operator/=(const std::complex<double> alpha)
+    {
+            double cReal; double cImag;
+            std::complex<double> alphaInv = 1.0/alpha;
+
+            double aReal = alphaInv.real();
+            double aImag = alphaInv.imag();
+
+            for(long i = 0; i < rows; i++)
+            {
+            for(long j = 0; j < cols; j++)
+            {
+            cReal          = mData(2*i,j);
+		    cImag          = mData(2*i+1,j);
+		    mData(2*i,j)   = cReal*aReal - cImag*aImag;
+		    mData(2*i+1,j) = cReal*aImag + cImag*aReal;
+            }}
+    }
+
+
+    LapackMatrixCmplx16 operator/(const double alpha)
+    {
+    LapackMatrixCmplx16 R(*this);
+    R /= alpha;
+    return R;
+    }
+
+    LapackMatrixCmplx16 operator/(const std::complex<double> alpha)
+    {
+    LapackMatrixCmplx16 R(*this);
+    R /= alpha;
+    return R;
+    }
+
+
+    bool isNull() const
+    {
+    if((rows == 0)||(cols == 0)) { return true;}
+    return false;
+    }
 
 
 //  C := alpha*op( A )*op( B ) + beta*C,
