@@ -179,6 +179,26 @@ public:
 	     z = std::complex<double>(mData(2*i,j),mData(2*i + 1,j));
 	}
 
+
+	/*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
+
+	friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrixCmplx16&  V)
+	{
+        long i; long j;
+
+        for(i = 0;  i < V.rows; i++)
+        {
+        for(j = 0; j <  V.cols; j++)
+        {
+          outStream <<   std::scientific << std::setprecision(3) <<  std::right << std::setw(10) << V(i,j) << " ";
+        }
+        outStream << std::endl;
+        }
+        return outStream;
+	}
+
+
+
     /*!
     Returns a reference to the element with index (i,j) - indexing
     starting at (0,0). Using the fact that the pointer to a complex<double> value
@@ -334,7 +354,6 @@ public:
 
         assert(sizeCheck(this->rows,B.rows));
     	assert(sizeCheck(this->cols,B.cols));
-
     	mData = B.mData;
 	}
 

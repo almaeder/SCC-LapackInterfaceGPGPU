@@ -57,6 +57,8 @@
 #endif
 #endif
 
+#include <sstream>
+#include <stdexcept>
 
 #include "SCC_LapackMatrix.h"
 
@@ -108,6 +110,18 @@ class LapackBandMatrix
     	Sp.initialize(kl + ku + 1, N);
 	}
 
+   void operator=(const LapackBandMatrix& S)
+   {
+	   if(this->N == 0){initialize(S);}
+	   else
+	   {
+	   assert(sizeCheck(S.kl, S.ku, S.N));
+	   Sp.initialize(S.Sp);
+	   }
+   }
+
+
+
 	#ifdef _DEBUG
 	double& operator()(long i, long j)
 	{
@@ -120,6 +134,8 @@ class LapackBandMatrix
     	assert(boundsCheck(i,j));
 		return Sp(ku +  (i-j),j);
 	}
+
+
 
 
 	#else
@@ -142,11 +158,40 @@ class LapackBandMatrix
 		Sp.setToValue(val);
 	}
 
+//
+// Algebraic operators utilize algebraic operations of underlying LapackMatric
+//
+
+
+
+
+/*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
+
+friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
+{
+        long i; long j; double val;
+
+        for(i = 0;  i < V.N; i++)
+        {
+        for(j = 0; j <  V.N; j++)
+        {
+          if((j > i + ku)||(j < i - kl))
+          {val = 0.0;}
+          else
+          {val = V(i,j); }
+          outStream <<   std::scientific << std::setprecision(3) <<  std::right << std::setw(10) << val << " ";
+        }
+        outStream << std::endl;
+        }
+        return outStream;
+}
+
 
 
 // Fortran indexing bounds check max(1,j-ku) <= i <= min(N,j+kl)
 
 #ifdef _DEBUG
+
 	bool boundsCheck(long i, long j) const
 	{
         long a = (j-ku > 0)   ?  j - ku : 0;
@@ -162,9 +207,27 @@ class LapackBandMatrix
 	    }
 	    return true;
 	}
+
+
+    bool sizeCheck(long dLower, long dUpper, long Msize) const
+    {
+    	if((dLower != kl)||(dUpper != ku)||(Msize != N))
+    	{
+    	std::cerr  <<  "Band matrix assignment error  "  << "\n";
+	    std::cerr  <<  "kl =  " << kl   << "\n";
+	    std::cerr  <<  "ku =  " << ku   << "\n";
+	    std::cerr  <<  "N  =  " << N    << "\n";
+	    std::cerr <<  "Offending sizes input  " << "kl : " << dLower << ", ku : " << dUpper  << ", N = " <<  Msize << "\n";
+	    return false;
+    	}
+    	return true;
+    }
 #else
         bool boundsCheck(long, long) const {return true;}
+        bool sizeCheck(long dLower, long dUpper, long Msize) const {return true;}
 #endif
+
+
 
     SCC::LapackMatrix Sp;
 
