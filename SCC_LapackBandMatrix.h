@@ -57,9 +57,6 @@
 #endif
 #endif
 
-#include <sstream>
-#include <stdexcept>
-
 #include "SCC_LapackMatrix.h"
 
 #ifndef SCC_LAPACK_BAND_MATRIX_
@@ -88,7 +85,7 @@ class LapackBandMatrix
 
 	void initialize()
 	{
-		Sp.initialize();
+		mData.initialize();
 		kl = 0;
 		ku = 0;
     	N  = 0;
@@ -99,7 +96,7 @@ class LapackBandMatrix
 		kl = S.kl;
 		ku = S.ku;
 		N  = S.N;
-	    Sp.initialize(S.Sp);
+	    mData.initialize(S.mData);
 
 	}
     void initialize(long kl, long ku, long N)
@@ -107,32 +104,21 @@ class LapackBandMatrix
     	this->kl = kl;
     	this->ku = ku;
     	this->N  = N;
-    	Sp.initialize(kl + ku + 1, N);
+    	mData.initialize(kl + ku + 1, N);
 	}
-
-   void operator=(const LapackBandMatrix& S)
-   {
-	   if(this->N == 0){initialize(S);}
-	   else
-	   {
-	   assert(sizeCheck(S.kl, S.ku, S.N));
-	   Sp.initialize(S.Sp);
-	   }
-   }
-
 
 
 	#ifdef _DEBUG
 	double& operator()(long i, long j)
 	{
 		assert(boundsCheck(i,j));
-		return Sp(ku +  (i-j),j);
+		return mData(ku +  (i-j),j);
 	}
 
     const double& operator()(long i, long j) const
 	{
     	assert(boundsCheck(i,j));
-		return Sp(ku +  (i-j),j);
+		return mData(ku +  (i-j),j);
 	}
 
 
@@ -142,27 +128,124 @@ class LapackBandMatrix
 	inline double& operator()(long i, long j)
 	{
 
-		return Sp(ku +  (i-j),j);
+		return mData(ku +  (i-j),j);
 	}
 
     inline const double& operator()(long i, long j) const
 	{
-		return Sp(ku +  (i-j),j);
+		return mData(ku +  (i-j),j);
 	}
 	#endif
 
-	double* getDataPointer() const {return Sp.dataPtr;}
-
-    void setToValue(double val)
-	{
-		Sp.setToValue(val);
-	}
+	double* getDataPointer() const {return mData.dataPtr;}
 
 //
 // Algebraic operators utilize algebraic operations of underlying LapackMatric
 //
+    inline void operator=(const LapackBandMatrix& B)
+	{
+    	if(mData.isNull())
+    	{
+    		kl    = B.kl;
+    		ku    = B.ku;
+    		N     = B.N;
+    		mData.initialize(B.mData);
+    	}
+    	else
+    	{
+    	assert(sizeCheck(B.kl, B.ku, B.N));
+    	mData = B.mData;
+    	}
+	}
 
 
+    inline void operator+=(const  LapackBandMatrix& B)
+    {
+        assert(sizeCheck(B.kl, B.ku, B.N));
+    	mData += B.mData;
+    }
+
+    LapackBandMatrix operator+(const LapackBandMatrix& B)
+    {
+        assert(sizeCheck(B.kl, B.ku, B.N));
+    	LapackBandMatrix     C(*this);
+    	C.mData += B.mData;
+        return C;
+    }
+
+    LapackBandMatrix operator-(const LapackBandMatrix& B)
+    {
+        assert(sizeCheck(B.kl, B.ku, B.N));
+    	LapackBandMatrix     C(*this);
+    	C.mData -= B.mData;
+        return C;
+    }
+
+
+    inline void operator-=(const  LapackBandMatrix& B)
+    {
+      assert(sizeCheck(B.kl, B.ku, B.N));
+      mData -= B.mData;
+    }
+
+    inline void operator*=(const double alpha)
+    {
+       mData *= alpha;
+    }
+
+    LapackBandMatrix operator*(const double alpha)
+    {
+    LapackBandMatrix R(*this);
+    R *= alpha;
+    return R;
+    }
+
+    friend LapackBandMatrix operator*(const double alpha, const LapackBandMatrix& B)
+    {
+    LapackBandMatrix R(B);
+    R *= alpha;
+    return R;
+    }
+
+    inline void operator/=(const double alpha)
+    {
+    mData /= alpha;
+    }
+
+    LapackBandMatrix operator/(const double alpha)
+    {
+    LapackBandMatrix R(*this);
+    R /= alpha;
+    return R;
+    }
+
+
+    bool isNull() const
+    {
+    return mData.isNull();
+    }
+
+    void setToValue(double val)
+    {
+      mData.setToValue(val);
+    }
+
+    void setToIdentity()
+    {
+    	setToValue(0.0);
+    	for(long k = 0; k < N; k++)
+    	{
+    	this->operator()(k,k) = 1.0;
+    	}
+    }
+
+    void setDiagonal(const std::vector<double>& diag)
+    {
+    	for(long k = 0; k < N; k++)
+    	{
+    		this->operator()(k,k) = diag[k];
+    	}
+    }
 
 
 /*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
@@ -229,7 +312,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
 
 
 
-    SCC::LapackMatrix Sp;
+    SCC::LapackMatrix mData;
 
 	long ku;
 	long kl;
