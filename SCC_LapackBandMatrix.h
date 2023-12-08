@@ -57,6 +57,7 @@
 #endif
 #endif
 
+#include <cmath>
 #include "SCC_LapackMatrix.h"
 
 #ifndef SCC_LAPACK_BAND_MATRIX_
@@ -173,6 +174,12 @@ class LapackBandMatrix
         return C;
     }
 
+    inline void operator-=(const  LapackBandMatrix& B)
+    {
+      assert(sizeCheck(B.kl, B.ku, B.N));
+      mData -= B.mData;
+    }
+
     LapackBandMatrix operator-(const LapackBandMatrix& B)
     {
         assert(sizeCheck(B.kl, B.ku, B.N));
@@ -181,12 +188,6 @@ class LapackBandMatrix
         return C;
     }
 
-
-    inline void operator-=(const  LapackBandMatrix& B)
-    {
-      assert(sizeCheck(B.kl, B.ku, B.N));
-      mData -= B.mData;
-    }
 
     inline void operator*=(const double alpha)
     {
@@ -248,9 +249,24 @@ class LapackBandMatrix
     }
 
 
+    double normFrobenius()
+    {
+    	double val    = 0.0;
+    	double valSum = 0.0;
+
+    	for(long i = 0; i < N; i++)
+    	{
+    	for(long j = std::max((long)0,i- kl); j <= std::min(i+ku,N-1); j++)
+    	{
+    		val = this->operator()(i,j);
+    		valSum += val*val;
+    	}}
+    	return std::sqrt(valSum);
+    }
+
 /*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
 
-friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
+friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&  V)
 {
         long i; long j; double val;
 
@@ -258,7 +274,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
         {
         for(j = 0; j <  V.N; j++)
         {
-          if((j > i + ku)||(j < i - kl))
+          if((j > i + V.ku)||(j < i - V.kl))
           {val = 0.0;}
           else
           {val = V(i,j); }

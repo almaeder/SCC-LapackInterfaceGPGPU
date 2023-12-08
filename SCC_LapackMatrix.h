@@ -381,27 +381,10 @@ public:
     	assert(sizeCheck(this->rows,B.rows));
     	assert(sizeCheck(this->cols,B.cols));
 
-    	LapackMatrix     C(*this);
-    	for(long i = 0; i < rows*cols; i++)
-    	{
-    		C.dataPtr[i] += B.dataPtr[i];
-    	}
+    	LapackMatrix C(*this);
+    	C += B;
         return C;
     }
-
-    LapackMatrix operator-(const LapackMatrix& B)
-    {
-    	assert(sizeCheck(this->rows,B.rows));
-    	assert(sizeCheck(this->cols,B.cols));
-
-    	LapackMatrix     C(*this);
-    	for(long i = 0; i < rows*cols; i++)
-    	{
-    		C.dataPtr[i] -= B.dataPtr[i];
-    	}
-    	return C;
-    }
-
 
     inline void operator-=(const  LapackMatrix& D)
     {
@@ -412,6 +395,17 @@ public:
     		dataPtr[i] -= D.dataPtr[i];
       }
     }
+
+    LapackMatrix operator-(const LapackMatrix& B)
+    {
+    	assert(sizeCheck(this->rows,B.rows));
+    	assert(sizeCheck(this->cols,B.cols));
+
+    	LapackMatrix C(*this);
+    	C -= B;
+    	return C;
+    }
+
 
     inline void operator*=(const double alpha)
     {
