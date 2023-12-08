@@ -48,31 +48,6 @@
 #
 #############################################################################
 */
-/*
-subroutine dgbmv	(	character 	TRANS,
-integer 	M,
-integer 	N,
-integer 	KL,
-integer 	KU,
-double precision 	ALPHA,
-double precision, dimension(lda,*) 	A,
-integer 	LDA,
-double precision, dimension(*) 	X,
-integer 	INCX,
-double precision 	BETA,
-double precision, dimension(*) 	Y,
-integer 	INCY
-)
-DGBMV
-
-Purpose:
- DGBMV  performs one of the matrix-vector operations
-
-    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,
-
- where alpha and beta are scalars, x and y are vectors and A is an
- m by n band matrix, with kl sub-diagonals and ku super-diagonals.
-*/
 
 #ifdef  _DEBUG
 #include <cstdio>
@@ -89,9 +64,16 @@ Purpose:
 #define SCC_LAPACK_BAND_MATRIX_
 
 //
-// Prototypes for the only two LAPACK BLAS routines used by this class
+// Prototypes for the only LAPACK BLAS routine used by this class
 //
+/*
+ DGBMV  performs one of the matrix-vector operations
 
+    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,
+
+ where alpha and beta are scalars, x and y are vectors and A is an
+ m by n band matrix, with kl sub-diagonals and ku super-diagonals.
+*/
 
 extern "C" void dgbmv_(char* TRANS, long* M, long* N, long* kl, long* ku, double* alpha, double* Aptr,
                        long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
@@ -400,6 +382,32 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
         bool sizeCheck(long dLower, long dUpper, long Msize) const {return true;}
         bool sizecheckNx1(long rows, long cols)  const {return true;}
 #endif
+
+#ifdef _DEBUG
+    bool sizeCheck(long size1, long size2)
+    {
+    if(size1 != size2)
+    {
+    std::cerr << "LapackBandMatrix sizes are incompatible : " << size1 << " != " << size2 << " ";
+    return false;
+    }
+    return true;
+    }
+
+    bool sizeCheck(long size1, long size2) const
+    {
+    if(size1 != size2)
+    {
+    std::cerr << "LapackBandMatrix sizes are incompatible : " << size1 << " != " << size2 << " ";
+    return false;
+    }
+    return true;
+    }
+#else
+    bool sizeCheck(long, long) {return true;}
+    bool sizeCheck(long, long) const{return true;}
+#endif
+
 
 
 
