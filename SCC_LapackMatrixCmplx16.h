@@ -239,6 +239,79 @@ public:
 #endif
 
 
+//
+// Convenience access for single column or row matrices, e.g.
+// matrices initialized with (N,1) or (1,N).
+//
+// Indexing starts at 0;
+//
+//
+#ifdef _DEBUG
+    std::complex<double>&  operator()(long i)
+    {
+    assert(singleRowOrColCheck());
+
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    assert(boundsCheck(i1, 0, rows-1,1));
+    assert(boundsCheck(i2, 0, cols-1,2));
+
+    return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i1) + i2*(2*rows))));
+    };
+
+    const std::complex<double>&  operator()(long i) const
+    {
+    assert(singleRowOrColCheck());
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    assert(boundsCheck(i1, 0, rows-1,1));
+    assert(boundsCheck(i2, 0, cols-1,2));
+    return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i1) + i2*(2*rows))));
+    };
+#else
+
+    /*!
+    Returns a reference to the element with index (i) in a LapackMatrixCmplx16
+    with a single row or column.
+    Indexing starting at (0)
+    */
+    inline std::complex<double>&  operator()(long i)
+    {
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i1) + i2*(2*rows))));
+    };
+
+    /*!
+    Returns a reference to the element with index (i) in a LapackMatrixCmplx16
+    with a single row or column.
+    Indexing starting at (0)
+     */
+    inline const std::complex<double>&  operator()(long i) const
+    {
+
+    long i1 = i;
+    long i2 = i;
+    if     (cols == 1) {i2 = 0;}
+    else if(rows == 1) {i1 = 0;}
+
+    return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i1) + i2*(2*rows))));
+    };
+
+
+#endif
+
+
+
     double normFrobenius() const
     {
 	double valSum = 0.0;
@@ -540,6 +613,19 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
 }
 
 
+LapackMatrixCmplx16 conjugateTranspose() const
+{
+	LapackMatrixCmplx16 R(cols,rows);
+	for(long i = 0; i < rows; i++)
+	{
+		for(long j = 0; j < cols; j++)
+		{
+			R(j,i) = {this->operator()(i,j).real(), -this->operator()(i,j).imag()};
+		}
+	}
+	return R;
+}
+
 
 #ifdef _DEBUG
         bool boundsCheck(long i, long begin, long end,int coordinate) const
@@ -556,6 +642,22 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
         bool boundsCheck(long, long, long,int) const {return true;}
 #endif
 
+
+
+#ifdef _DEBUG
+        bool singleRowOrColCheck() const
+        {
+        if((rows != 1)&&(cols != 1))
+        {
+        std::cerr << "LapackMatrixCmplx16 Error: Use of single index access"  << std::endl;
+        std::cerr << "for LapackMatrixCmplx that is not a single row or column" << std::endl;
+        return false;
+        }
+        return true;
+        }
+#else
+        bool singleRowOrColCheck() const {return true;}
+#endif
 
 #ifdef _DEBUG
     bool sizeCheck(long size1, long size2)

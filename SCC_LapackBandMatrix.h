@@ -48,6 +48,31 @@
 #
 #############################################################################
 */
+/*
+subroutine dgbmv	(	character 	TRANS,
+integer 	M,
+integer 	N,
+integer 	KL,
+integer 	KU,
+double precision 	ALPHA,
+double precision, dimension(lda,*) 	A,
+integer 	LDA,
+double precision, dimension(*) 	X,
+integer 	INCX,
+double precision 	BETA,
+double precision, dimension(*) 	Y,
+integer 	INCY
+)
+DGBMV
+
+Purpose:
+ DGBMV  performs one of the matrix-vector operations
+
+    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,
+
+ where alpha and beta are scalars, x and y are vectors and A is an
+ m by n band matrix, with kl sub-diagonals and ku super-diagonals.
+*/
 
 #ifdef  _DEBUG
 #include <cstdio>
@@ -62,6 +87,16 @@
 
 #ifndef SCC_LAPACK_BAND_MATRIX_
 #define SCC_LAPACK_BAND_MATRIX_
+
+//
+// Prototypes for the only two LAPACK BLAS routines used by this class
+//
+
+
+extern "C" void dgbmv_(char* TRANS, long* M, long* N, long* kl, long* ku, double* alpha, double* Aptr,
+                       long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
+
+
 
 namespace SCC
 {
@@ -248,7 +283,6 @@ class LapackBandMatrix
     	}
     }
 
-
     double normFrobenius()
     {
     	double val    = 0.0;
@@ -263,6 +297,34 @@ class LapackBandMatrix
     	}}
     	return std::sqrt(valSum);
     }
+
+
+    LapackMatrix operator*(const LapackMatrix& x)
+    {
+    assert(sizecheckNx1(x.rows,x.cols));
+	LapackMatrix y(x.rows,1);
+
+    char TRANS     = 'N';
+    double ALPHA   = 1.0;
+    double BETA    = 0.0;
+    long INCX      = 1;
+    long INCY      = 1;
+
+
+    /*
+     DGBMV  performs one of the matrix-vector operations
+
+    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,
+
+    where alpha and beta are scalars, x and y are vectors and A is an
+    m by n band matrix, with kl sub-diagonals and ku super-diagonals.
+   */
+
+    dgbmv_(&TRANS,&N,&N, &kl, &ku,&ALPHA, mData.dataPtr,&mData.rows, x.dataPtr,&INCX,&BETA,y.dataPtr,&INCY);
+	return y;
+}
+
+
 
 /*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
 
@@ -290,7 +352,6 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
 // Fortran indexing bounds check max(1,j-ku) <= i <= min(N,j+kl)
 
 #ifdef _DEBUG
-
 	bool boundsCheck(long i, long j) const
 	{
         long a = (j-ku > 0)   ?  j - ku : 0;
@@ -321,9 +382,23 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
     	}
     	return true;
     }
+
+    bool sizecheckNx1(long rows, long cols) const
+    {
+    if((rows != N) || (cols != 1))
+    {
+    std::cerr  <<  "LapackBandMatrix * LapackMatrix error   "  << "\n";
+    std::cerr  <<  "LapackMatrix must be N x 1 matrix       "  << "\n";
+    std::cerr  <<  "LapackMatrix rows : "  << rows << "\n";
+    std::cerr  <<  "LapackMatrix cols : "  << cols << "\n";
+    return false;
+    }
+    return true;
+    }
 #else
         bool boundsCheck(long, long) const {return true;}
         bool sizeCheck(long dLower, long dUpper, long Msize) const {return true;}
+        bool sizecheckNx1(long rows, long cols)  const {return true;}
 #endif
 
 

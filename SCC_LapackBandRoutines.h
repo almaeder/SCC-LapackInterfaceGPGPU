@@ -26,12 +26,19 @@
 #############################################################################
 */
 
-
+#ifdef  _DEBUG
+#include <cstdio>
+#else
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+#endif
 
 #include <vector>
 #include <iostream>
 #include <cstring>
 
+#include "SCC_LapackMatrix.h"
 #include "SCC_LapackBandMatrix.h"
 
 #ifndef SCC_LAPACK_BAND_ROUTINES_
@@ -138,6 +145,12 @@ class DGBSVX
 	void setEquilibrationType(char T)
 	{
 	EQUED = T;
+	}
+
+    void applyInverse(SCC::LapackBandMatrix& S, LapackMatrix& x)
+	{
+    assert(sizecheckNx1(S.N,x.rows,x.cols));
+	applyInverse(S,x.dataPtr);
 	}
 
 	void applyInverse(SCC::LapackBandMatrix& S, std::vector<double>& f)
@@ -363,7 +376,26 @@ class DGBSVX
     std::vector<double>          X;
     std::vector<double>        WORK;
     std::vector<long>         IWORK;
+
+#ifdef _DEBUG
+    bool sizecheckNx1(long bandDim, long rows, long cols) const
+    {
+    if((rows != bandDim) || (cols != 1))
+    {
+    std::cerr  <<  "LapackBandMatrix * LapackMatrix error   "  << "\n";
+    std::cerr  <<  "LapackMatrix must be N x 1 matrix       "  << "\n";
+    std::cerr  <<  "LapackMatrix rows : "  << rows << "\n";
+    std::cerr  <<  "LapackMatrix cols : "  << cols << "\n";
+    return false;
+    }
+    return true;
+    }
 };
+#else
+bool sizecheckNx1(long bandDim, long rows, long cols)  const {return true;}
+#endif
+
+
 
 }
 
