@@ -1,67 +1,36 @@
-
-#ifdef  _DEBUG
-#include <cstdio>
-#else
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#endif
-
-#ifdef _MSC_VER
-#include "iso646.h"          // So "and" is equivalenced to &&
-typedef unsigned int uint;   // Define uint to be unsigned int
-#endif
-
-
-
-#ifndef SCC_LAPACK_MATRIX_
-#define SCC_LAPACK_MATRIX_
-//
-// Prototypes for the only two LAPACK BLAS routines used by this class
-//
-extern "C" void dgemm_(char* TRANSA,char* TRANSB,long* M, long*N ,long* K,double* ALPHA,
-                       double* A,long* LDA,double* B, long* LDB,double* BETA,double* C,long* LDC);
-
-extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Aptr,
-                       long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
-
-//
-//
-
-#include <vector>
-#include <cassert>
-#include <iostream>
-#include <cmath>
-#include <iomanip>
-/**
- *  A minimal matrix class that facilitates the invocation of LAPACK
- *  routines. This class
+/*
+ * SCC_LapackMatrix.h
  *
- *  (+) stores data by columns :  FORTRAN convention
- *  (+) indexing starts at 0   :  C/C++   convention
+ *  Created on: April 15, 2016
+ *      Author: anderson
  *
- *
- * Calling Fortran versions directly using appropriately modified prototypes.
- *
- * Data type mapping used:
- *
- * C++  char   ==  Fortran character
- * C++  int    ==  Fortran LOGICAL
- * C++  long   ==  Fortran INTEGER
- * C++  double ==  Fortran DOUBLE PRECISION
- *
- * Linking to the Fortran routines using -llapack -lblas
- *
- * April 15, 2016
- *
- * Updated July 27, 2018 (CRA)
- *
- *
+ *  Updated    : July 27, 2018 (C.R. Anderson)
+ *  Updated    : Dec. 09, 2023 (C.R. Anderson)
  */
+//
+//  A matrix class that facilitates the invocation of LAPACK
+//  routines. This class
+//
+//  (+) stores data by columns :  FORTRAN convention
+//  (+) indexing starts at 0   :  C/C++   convention
+//
+//
+// Calling Fortran versions directly using appropriately modified prototypes.
+//
+// Data type mapping used:
+//
+// C++  char   ==  Fortran character
+// C++  int    ==  Fortran LOGICAL
+// C++  long   ==  Fortran INTEGER
+// C++  double ==  Fortran DOUBLE PRECISION
+//
+// Linking to the Fortran routines using -llapack -lblas
+//
+// Lapack routine dependencies : dgemm_ and dgemv_
 /*
 #############################################################################
 #
-# Copyright  2016-2018 Chris Anderson
+# Copyright  2016-2023 Chris Anderson
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the Lesser GNU General Public License as published by
@@ -78,6 +47,29 @@ extern "C" void dgemv_(char* TRANS, long* M, long* N, double* alpha, double* Apt
 #
 #############################################################################
 */
+#ifdef  _DEBUG
+#include <cstdio>
+#else
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+#endif
+
+#ifdef _MSC_VER
+#include "iso646.h"          // So "and" is equivalenced to &&
+typedef unsigned int uint;   // Define uint to be unsigned int
+#endif
+
+#include <vector>
+#include <cassert>
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+
+#include "SCC_LapackHeaders.h"
+
+#ifndef SCC_LAPACK_MATRIX_
+#define SCC_LAPACK_MATRIX_
 
 namespace SCC
 {

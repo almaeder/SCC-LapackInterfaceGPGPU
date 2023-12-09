@@ -11,6 +11,32 @@
 // data so that only indices j >= i with j < i + ku are allowed where ku is
 // the number of super diagonals of the matrix.
 //
+// Note: SCC_LapackSymBandMatrix stores the upper diagonal
+// data of a symmetric matrix so the UPLO parameter in the
+// Lapack symmetric routines should be specified as "U".
+//
+// Lapack dependencies : dsbmv_
+//
+/*
+#############################################################################
+#
+# Copyright  2015-2020 Chris Anderson
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the Lesser GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# For a copy of the GNU General Public License see
+# <http://www.gnu.org/licenses/>.
+#
+#############################################################################
+*/
 
 #include "LapackInterface/SCC_LapackMatrix.h"
 
@@ -103,6 +129,27 @@ class LapackSymBandMatrix
     	return ku;
     }
 
+
+    void applySymmetricBandMatrix(SCC::LapackSymBandMatrix& A,
+    std::vector<double>& x, std::vector<double>& y)
+    {
+	long N = A.getDimension();
+
+	if((long)y.size() != N)  {y.resize(N,0.0);}
+
+	char UPLO    = 'U';
+    long K       = A.getSuperDiagonalCount();
+    double ALPHA = 1.0;
+    double BETA  = 0.0;
+    double*Aptr  = A.getDataPointer();
+    double*Xptr  = &x[0];
+    double*Yptr  = &y[0];
+    long LDA     = K+1;
+    long INCX    = 1;
+    long INCY    = 1;
+
+    dsbmv_(&UPLO,&N,&K,&ALPHA,Aptr,&LDA,Xptr,&INCX,&BETA,Yptr,&INCY);
+    }
 
 // Fortran indexing bounds check
 

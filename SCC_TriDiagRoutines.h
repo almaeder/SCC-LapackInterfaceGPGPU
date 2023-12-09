@@ -4,7 +4,26 @@
  *  Created on: Jul 4, 2020
  *      Author: anderson
  */
-
+/*
+#############################################################################
+#
+# Copyright  2020- Chris Anderson
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the Lesser GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# For a copy of the GNU General Public License see
+# <http://www.gnu.org/licenses/>.
+#
+#############################################################################
+*/
 #include <vector>
 #include <stdexcept>
 #include <exception>
@@ -15,35 +34,16 @@
 #ifndef TRI_DIAG_ROUTINES_
 #define TRI_DIAG_ROUTINES_
 
-
-// The diagonal component of an N x N s tridiagonal matrix is specified
-// with a double vector of size N.
+// For general tri-diagonal matrices,the diagonal component of an N x N s
+// tri-diagonal matrix is specified with a double vector of size N.
 //
 // The off-diagonal components are specified with  double vectors of size N-1
 
-extern "C" int dgttrf_(long* N, double* DL,double* D, double* DU, double* DU2, long* IPIV,long* INFO);
-
-extern "C" int dgttrs_(char* TRANS, long* N, long* NRHS,double* DL,double* D, double* DU, double* DU2, long* IPIV,double* B, long* LDB, long*INFO);
-
-
-// The diagonal component of an N x N symmetric tridiagonal matrix is specified
+// The diagonal component of an N x N symmetric tri-diagonal matrix is specified
 // with a double vector of size N.
 //
-// The off-diagonal component is specified with a double vector os size N-1
+// The off-diagonal component is specified with a double vector of size N-1
 
-extern "C" int dsteqr_(char *compz, long *n, double *d, double *e, double *z,
-		               long *ldz, double *work, long *info);
-
-extern "C" int dstevx_(char *jobz, char *range, long *n, double *
-                       d__, double *e, double *vl, double *vu, long *il,
-                       long *iu, double *abstol, long *m, double *w,
-                       double *z__, long *ldz, double *work, long *iwork,
-                       long *ifail, long *info);
-
-extern "C" int dstebz_(char *range, char *order, long *n, double
-                       *vl, double *vu, long *il, long *iu, double *abstol,
-                       double *d__, double *e, long *m, long *nsplit, double *w, long *iblock,
-                       long *isplit, double *work, long *iwork, long *info);
 
 namespace SCC
 {
@@ -64,7 +64,6 @@ void realTriLUfactorization(std::vector<double>& DL, std::vector<double>& D, std
 
 	IPIV.clear();
 	IPIV.resize(N,0);
-
 
 	DU2.clear();
     DU2.resize(N-2,0.0);

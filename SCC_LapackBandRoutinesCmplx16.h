@@ -1,16 +1,14 @@
 /*
- * SCC_LapackBandRoutines.h
+ * SCC_LapackBandRoutinesCmplx16.h
  *
- *  Created on: Aug 17, 2018
+ *  Created on: Dec. 3, 2023
  *      Author: anderson
- *
- *  Updated: Dec. 8, 2023 (C.R. Anderson)
  */
 
 /*
 #############################################################################
 #
-# Copyright  2018 Chris Anderson
+# Copyright  2023 Chris Anderson
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the Lesser GNU General Public License as published by
@@ -28,347 +26,240 @@
 #############################################################################
 */
 
-#ifdef  _DEBUG
-#include <cstdio>
-#else
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#endif
-
 #include <vector>
 #include <iostream>
 #include <cstring>
 
 #include "SCC_LapackHeaders.h"
-#include "SCC_LapackMatrix.h"
-#include "SCC_LapackBandMatrix.h"
+#include "SCC_LapackBandMatrixCmplx16.h"
 
-#ifndef SCC_LAPACK_BAND_ROUTINES_
-#define SCC_LAPACK_BAND_ROUTINES_
+#ifndef SCC_LAPACK_BAND_ROUTINES_CMPLX_16_
+#define SCC_LAPACK_BAND_ROUTINES_CMPLX_16_
+
 
 namespace SCC
 {
 
 /*
-*  DGBSVX uses the LU factorization to compute the solution to a real
-*  system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
-*  where A is a band matrix of order N with KL subdiagonals and KU
-*  superdiagonals, and X and B are N-by-NRHS matrices.
-*
-*  Error bounds on the solution and a condition estimate are also
-*  provided.
-*
+ ZGBSVX uses the LU factorization to compute the solution to a complex
+ system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
+ where A is a band matrix of order N with KL subdiagonals and KU
+ superdiagonals, and X and B are N-by-NRHS matrices.
+
+ Error bounds on the solution and a condition estimate are also
+ provided.
 */
 
-class DGBSVX
+class ZGBSVX
 {
-	public:
+public:
 
-	DGBSVX()
+	ZGBSVX()
 	{
-	initialize();
-	}
-
-	DGBSVX(const DGBSVX& dgbsvx)
-	{
-		initialize(dgbsvx);
+		initialize();
 	}
 
 	void initialize()
 	{
-		FACT  = 'E'; // E = equilibrate
-		EQUED = 'B';
-		RCOND = 0.0;
-	    FERR  = 0.0;
-	    BERR  = 0.0;
+    RCOND = 0.0;
+	FERR.clear();
+	BERR.clear();
 
-	    ABmatrix.initialize();
-	    AFB.initialize();
-	    IPIV.clear();
-	    R.clear();
-	    C.clear();
-	    X.clear();
-	    WORK.clear();
-	    IWORK.clear();
-	}
-	void initialize(const DGBSVX& dgbsvx)
-	{
-		FACT  = dgbsvx.FACT;
-		EQUED = dgbsvx.EQUED;
-
-		RCOND = dgbsvx.RCOND;
-	    FERR  = dgbsvx.FERR;
-	    BERR  = dgbsvx.BERR;
-
-	    // For caching factors
-
-	    ABmatrix.initialize(dgbsvx.ABmatrix);
-	    AFB.initialize(dgbsvx.AFB);
-	    IPIV = dgbsvx.IPIV;
-	    R    = dgbsvx.R;
-	    C    = dgbsvx.C;
-	    X    = dgbsvx.X;
-	    WORK = dgbsvx.WORK;
-	    IWORK= dgbsvx.IWORK;
+	A.initialize();
+	AF.initialize();
 	}
 
-	void setEquilibration(bool val = true)
+    void applyInverse(const LapackBandMatrixCmplx16& A,std::vector <std::complex<double>>& b)
 	{
-	if(val) {FACT  = 'E';}
-	else    {FACT  = 'N';}
+    	    assert(A.sizeCheck(A.N,(long)b.size()));
+	        double* bptr =  &(reinterpret_cast<double(&)[2]>(b[0])[0]);
+			applyInverse(A,bptr);
 	}
 
-	void clearEquilibration()
+    void applyInverse(const LapackBandMatrixCmplx16& A,LapackMatrixCmplx16& b)
 	{
-	FACT  = 'N';
+    	    assert(A.sizeCheck(A.N,b.rows));
+    		applyInverse(A,b.mData.dataPtr,b.cols);
 	}
 
-	 /*
-          setEquilibrationType() specifies the form of equilibration that was done.
-          = 'N':  No equilibration (always true if FACT = 'N').
-          = 'R':  Row equilibration, i.e., A has been premultiplied by
-                  diag(R).
-          = 'C':  Column equilibration, i.e., A has been postmultiplied
-                  by diag(C).
-          = 'B':  Both row and column equilibration, i.e., A has been
-                  replaced by diag(R) * A * diag(C).
-    */
-
-
-	void setEquilibrationType(char T)
+	void applyInverse(const LapackBandMatrixCmplx16& S, double* b, long NRHS = 1)
 	{
-	EQUED = T;
-	}
+		//assert(A.sizeCheck(A.rows,A.cols));
 
-    void applyInverse(SCC::LapackBandMatrix& S, LapackMatrix& x)
-	{
-    assert(sizecheckNx1(S.N,x.rows,x.cols));
-	applyInverse(S,x.dataPtr);
-	}
+		char FACT  = 'E'; // Equilibrate, then factor
+		char TRANS = 'N'; // No transpose
 
-	void applyInverse(SCC::LapackBandMatrix& S, std::vector<double>& f)
-	{
-	applyInverse(S,&f[0]);
-	}
+		long N     = S.N;
+		long KL    = S.kl;
+		long KU    = S.ku;
 
-	void applyInverse(SCC::LapackBandMatrix& S, double* f)
-	{
-	createFactors(S);
-	applyInverse(f);
-	return;
-	}
+		//
+		// Duplicate input matrix (since this zgbsvx overwrites input matrix)
+		// and allocate temporaries
+        //
 
+		long LDAB  = KL + KU + 1;
+		long LDAF  = 2*KL + KU + 1;
 
-	void applyInverse(double* f)
-	{
-    //char FACT  = 'E'; // E Or N for no-equilibration
+		this->A.initialize(S);
+		this->AF.initialize(LDAF,N);
 
-    char TRANS = 'N';
+		double* Aptr  =  A.cmplxMdata.mData.dataPtr;
+		double* AFptr =  AF.mData.dataPtr;
 
-    long N     = ABmatrix.N;
-    long KL    = ABmatrix.kl;
-    long KU    = ABmatrix.ku;
+		std::vector <long >   IPIV(N);
+		long* IPIVptr      = &IPIV[0];
 
-    long NRHS  = 1;
-    double* AB = ABmatrix.getDataPointer();
-    long LDAB  = KL + KU + 1;
-    long LDAFB = 2*KL+KU+1;
+		char  EQED;
 
-    double* Bptr = &f[0];
-    long LDB     = N;
-    long LDX     = N;
+		std::vector<double>   R(N);
+		double* Rptr  = &R[0];
 
-    long INFO = 0;
+		std::vector<double>    C(N);
+		double* Cptr  =  &C[0];
 
-    // coeffRHS
-    char FACT_TYPE = 'F';
-
-    dgbsvx_(&FACT_TYPE, &TRANS, &N, &KL, &KU, &NRHS, AB, &LDAB, AFB.getDataPointer(), &LDAFB, &IPIV[0], &EQUED,
-    		&R[0], &C[0], Bptr, &LDB, &X[0], &LDX,&RCOND, &FERR,
-			&BERR, &WORK[0], &IWORK[0], &INFO);
-
-    if(INFO != 0)
-    {
-    	if(INFO < 0) { std::cout << -INFO << "argument to dgbsvx had an illegal value " << std::endl;}
-    	if(INFO > 0) { std::cout <<  "Error in dgbsvs INFO = " << INFO << " " << " N " << N << std::endl;}
-    }
-
-    // Capture the solution
-
-    // f = X;
-
-    std::memcpy(&f[0],&X[0],N*sizeof(double));
-	}
+		std::vector<double>   B(2*N*NRHS);
+		double* Bptr  =       &B[0];
+	    long LDB      =          N;
 
 
+		// b will be overwritten with the solution
+	    // so no need to declare X separately
 
-	void createFactors(const SCC::LapackBandMatrix& S)
-	{
+		double* Xptr   = b;
+		long LDX       = N;
 
-    // non-default equilibration set before call to this method
+		FERR.resize(NRHS);
+		BERR.resize(NRHS);
 
-    //char FACT =  'N':  The matrix A will be copied to AFB and factored.
-    //char FACT  = 'E':  The matrix A will be equilibrated if necessary, then
-    //                   copied to AFB and factored.
+		std::vector<double>   WORK(4*N);
+		double* WORKptr     = &WORK[0];
 
-    long NRHS  = 0;  // Just factoring so no right hand sides
+		std::vector<double>  RWORK(2*N);
+		double* RWORKptr   = &RWORK[0];
 
-    char TRANS = 'N';
+		long   INFO = 0;
 
-    long N     = S.N;
-    long KL    = S.kl;
-    long KU    = S.ku;
+		// Assign right hand side to B
 
-    ABmatrix.initialize(S);
-    double* AB = ABmatrix.getDataPointer();
-    long LDAB  = KL + KU + 1;
-    long LDAFB = 2*KL+KU+1;
-
-    AFB.initialize(LDAFB,N);
-    IPIV.resize(N);
-    R.resize(N);
-    C.resize(N);
-    X.resize(N);
-
-    WORK.resize(3*N);
-    IWORK.resize(N);
-
-    double doubleNull = 0.0;
-    double* Bptr      = &doubleNull;
-    long LDB          = N;
-
-    double xNull      = 0.0;
-    double* xPtr      = &xNull;
-
-    long LDX           = N;
-
-    //double RCOND = 1.0;
-    //double FERR;
-    //double BERR;
-
-    long INFO = 0;
+		for(long i = 0; i < 2*N*NRHS; i++)
+		{
+			Bptr[i] = b[i];
+		}
 
 
-    dgbsvx_(&FACT, &TRANS, &N, &KL, &KU, &NRHS, AB, &LDAB, AFB.getDataPointer(), &LDAFB, &IPIV[0], &EQUED,
-    		&R[0], &C[0], Bptr, &LDB, xPtr, &LDX,&RCOND, &FERR,
-			&BERR, &WORK[0], &IWORK[0], &INFO);
-
-    if(INFO != 0)
-    {
-    	if(INFO < 0) { std::cout << -INFO << "argument to dgbsvx had an illegal value " << std::endl;}
-    	if(INFO > 0) { std::cout <<  "Error in dgbsvs INFO = " << INFO << " " << " N " << N << std::endl;}
-    }
-
-	}
+		zgbsvx_(&FACT, &TRANS, &N, &KL, &KU, &NRHS, Aptr, &LDAB, AFptr, &LDAF, IPIVptr,
+		        &EQED, Rptr, Cptr, Bptr,&LDB, Xptr, &LDX, &RCOND,
+				&FERR[0], &BERR[0], WORKptr,RWORKptr, &INFO);
 
 
-	double getReciprocalCondNumber()
-	{
-	return RCOND;
+		if(INFO != 0)
+        {
+        std::cerr << "dgesvx  Failed : INFO = " << INFO  << std::endl;
+        exit(1);
+        }
 	}
 
 /*
-*  FERR    (output) DOUBLE PRECISION array, dimension (NRHS)
-*          The estimated forward error bound for each solution vector
-*          X(j) (the j-th column of the solution matrix X).
-*          If XTRUE is the true solution corresponding to X(j), FERR(j)
-*          is an estimated upper bound for the magnitude of the largest
-*          element in (X(j) - XTRUE) divided by the magnitude of the
-*          largest element in X(j).  The estimate is as reliable as
-*          the estimate for RCOND, and is almost always a slight
-*          overestimate of the true error.
+*  RCOND is DOUBLE PRECISION
+*  The estimate of the reciprocal condition number of the matrix
+*  A after equilibration (if done).  If RCOND is less than the
+*  machine precision (in particular, if RCOND = 0), the matrix
+*  is singular to working precision.  This condition is
+*  indicated by a return code of INFO > 0.
 */
-	double getForwardErrEstimate()
+
+	double getReciprocalConditionNumber()
 	{
-	return FERR;
+		return RCOND;
 	}
 
 /*
-*  BERR    (output) DOUBLE PRECISION array, dimension (NRHS)
-*          The componentwise relative backward error of each solution
-*          vector X(j) (i.e., the smallest relative change in
-*          any element of A or B that makes X(j) an exact solution).
+    FERR is DOUBLE PRECISION array, dimension (NRHS)
+    The estimated forward error bound for each solution vector
+    X(j) (the j-th column of the solution matrix X).
+    If XTRUE is the true solution corresponding to X(j), FERR(j)
+    is an estimated upper bound for the magnitude of the largest
+    element in (X(j) - XTRUE) divided by the magnitude of the
+    largest element in X(j).  The estimate is as reliable as
+    the estimate for RCOND, and is almost always a slight
+    overestimate of the true error.
 */
-	double getBackwardErrEstimate()
+
+	double getSolutionErrorEst()
 	{
-	return BERR;
+		return FERR[0];
+	}
+
+	std::vector<double> getMultipleSolutionErrorEst()
+	{
+		return FERR;
+	}
+
+/*
+	BERR is DOUBLE PRECISION array, dimension (NRHS)
+	The componentwise relative backward error of each solution
+	vector X(j) (i.e., the smallest relative change in
+	any element of A or B that makes X(j) an exact solution).
+*/
+	double getSolutionBackwardErrorEst()
+	{
+		return BERR[0];
+	}
+
+	std::vector<double> getMultipleSolutionBackwardErrorEst()
+	{
+		return BERR;
 	}
 
 
-	char   FACT;
-	char   EQUED;
 
-	double RCOND;
-    double FERR;
-    double BERR;
+    double          RCOND;
+	std::vector<double>    FERR;
+	std::vector<double>    BERR;
 
-    // For caching factors
-
-    SCC::LapackBandMatrix ABmatrix;
-    SCC::LapackMatrix          AFB;
-    std::vector<long>         IPIV;
-    std::vector<double>          R;
-    std::vector<double>          C;
-    std::vector<double>          X;
-    std::vector<double>        WORK;
-    std::vector<long>         IWORK;
-
-#ifdef _DEBUG
-    bool sizecheckNx1(long bandDim, long rows, long cols) const
-    {
-    if((rows != bandDim) || (cols != 1))
-    {
-    std::cerr  <<  "LapackBandMatrix * LapackMatrix error   "  << "\n";
-    std::cerr  <<  "LapackMatrix must be N x 1 matrix       "  << "\n";
-    std::cerr  <<  "LapackMatrix rows : "  << rows << "\n";
-    std::cerr  <<  "LapackMatrix cols : "  << cols << "\n";
-    return false;
-    }
-    return true;
-    }
-#else
-bool sizecheckNx1(long bandDim, long rows, long cols)  const {return true;}
-#endif
+	LapackBandMatrixCmplx16    A;
+	LapackMatrixCmplx16       AF;
 
 };
 
-}
+
+} // SCC namespace
 
 
 //
-// Lapack documentation
+// LAPACK documentation
+//
 /*
- *
-subroutine dgbsvx 	( 	character  	fact,
+subroutine zgbsvx 	( 	character  	fact,
 		character  	trans,
 		integer  	n,
 		integer  	kl,
 		integer  	ku,
 		integer  	nrhs,
-		double precision, dimension( ldab, * )  	ab,
+		complex*16, dimension( ldab, * )  	ab,
 		integer  	ldab,
-		double precision, dimension( ldafb, * )  	afb,
+		complex*16, dimension( ldafb, * )  	afb,
 		integer  	ldafb,
 		integer, dimension( * )  	ipiv,
 		character  	equed,
 		double precision, dimension( * )  	r,
 		double precision, dimension( * )  	c,
-		double precision, dimension( ldb, * )  	b,
+		complex*16, dimension( ldb, * )  	b,
 		integer  	ldb,
-		double precision, dimension( ldx, * )  	x,
+		complex*16, dimension( ldx, * )  	x,
 		integer  	ldx,
 		double precision  	rcond,
 		double precision, dimension( * )  	ferr,
 		double precision, dimension( * )  	berr,
-		double precision, dimension( * )  	work,
-		integer, dimension( * )  	iwork,
+		complex*16, dimension( * )  	work,
+		double precision, dimension( * )  	rwork,
 		integer  	info
 	)
 
 Purpose:
 
-     DGBSVX uses the LU factorization to compute the solution to a real
+     ZGBSVX uses the LU factorization to compute the solution to a complex
      system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
      where A is a band matrix of order N with KL subdiagonals and KU
      superdiagonals, and X and B are N-by-NRHS matrices.
@@ -436,7 +327,7 @@ Parameters
               Specifies the form of the system of equations.
               = 'N':  A * X = B     (No transpose)
               = 'T':  A**T * X = B  (Transpose)
-              = 'C':  A**H * X = B  (Transpose)
+              = 'C':  A**H * X = B  (Conjugate transpose)
 
     [in]	N
 
@@ -462,7 +353,7 @@ Parameters
 
     [in,out]	AB
 
-              AB is DOUBLE PRECISION array, dimension (LDAB,N)
+              AB is COMPLEX*16 array, dimension (LDAB,N)
               On entry, the matrix A in band storage, in rows 1 to KL+KU+1.
               The j-th column of A is stored in the j-th column of the
               array AB as follows:
@@ -485,10 +376,10 @@ Parameters
 
     [in,out]	AFB
 
-              AFB is DOUBLE PRECISION array, dimension (LDAFB,N)
+              AFB is COMPLEX*16 array, dimension (LDAFB,N)
               If FACT = 'F', then AFB is an input argument and on entry
               contains details of the LU factorization of the band matrix
-              A, as computed by DGBTRF.  U is stored as an upper triangular
+              A, as computed by ZGBTRF.  U is stored as an upper triangular
               band matrix with KL+KU superdiagonals in rows 1 to KL+KU+1,
               and the multipliers used during the factorization are stored
               in rows KL+KU+2 to 2*KL+KU+1.  If EQUED .ne. 'N', then AFB is
@@ -512,7 +403,7 @@ Parameters
               IPIV is INTEGER array, dimension (N)
               If FACT = 'F', then IPIV is an input argument and on entry
               contains the pivot indices from the factorization A = L*U
-              as computed by DGBTRF; row i of the matrix was interchanged
+              as computed by ZGBTRF; row i of the matrix was interchanged
               with row IPIV(i).
 
               If FACT = 'N', then IPIV is an output argument and on exit
@@ -557,7 +448,7 @@ Parameters
 
     [in,out]	B
 
-              B is DOUBLE PRECISION array, dimension (LDB,NRHS)
+              B is COMPLEX*16 array, dimension (LDB,NRHS)
               On entry, the right hand side matrix B.
               On exit,
               if EQUED = 'N', B is not modified;
@@ -573,7 +464,7 @@ Parameters
 
     [out]	X
 
-              X is DOUBLE PRECISION array, dimension (LDX,NRHS)
+              X is COMPLEX*16 array, dimension (LDX,NRHS)
               If INFO = 0 or INFO = N+1, the N-by-NRHS solution matrix X
               to the original system of equations.  Note that A and B are
               modified on exit if EQUED .ne. 'N', and the solution to the
@@ -616,20 +507,20 @@ Parameters
 
     [out]	WORK
 
-              WORK is DOUBLE PRECISION array, dimension (MAX(1,3*N))
-              On exit, WORK(1) contains the reciprocal pivot growth
+              WORK is COMPLEX*16 array, dimension (2*N)
+
+    [out]	RWORK
+
+              RWORK is DOUBLE PRECISION array, dimension (MAX(1,N))
+              On exit, RWORK(1) contains the reciprocal pivot growth
               factor norm(A)/norm(U). The "max absolute element" norm is
-              used. If WORK(1) is much less than 1, then the stability
+              used. If RWORK(1) is much less than 1, then the stability
               of the LU factorization of the (equilibrated) matrix A
               could be poor. This also means that the solution X, condition
               estimator RCOND, and forward error bound FERR could be
               unreliable. If factorization fails with 0<INFO<=N, then
-              WORK(1) contains the reciprocal pivot growth factor for the
+              RWORK(1) contains the reciprocal pivot growth factor for the
               leading INFO columns of A.
-
-    [out]	IWORK
-
-              IWORK is INTEGER array, dimension (N)
 
     [out]	INFO
 

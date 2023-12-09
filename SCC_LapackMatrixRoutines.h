@@ -3,12 +3,63 @@
 //
 // SCC::LapackMatrixRoutines
 //
-// A miscellaneous collection of classes whose functionality is
+// A collection of classes whose functionality is
 // based upon LAPACK routines. These routine are meant
-// to be used with instances of LapackMatrix.
+// to be used with instances of LapackMatrix. The documentation
+// for the each of the base LAPACK routines is contained at the
+// end of this file or can be found at
+//
+// https://netlib.org/lapack/explore-html.
 //
 // Author          : Chris Anderson
-// Version         : July, 27, 2020
+// Version         : July, 27, 2023
+//
+// https://netlib.org/lapack/explore-html
+//
+// Data mapping being used for direct invocation of
+// Fortran routines
+//
+// C++  int    ==  Fortran LOGICAL
+// C++  long   ==  Fortran INTEGER
+// C++  double ==  Fortran DOUBLE PRECISION
+//
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Current class list
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class DGELSY : Least squares solution of A*X = B
+// LAPACK base routine description:
+//
+// DGELSY computes the minimum-norm solution to a real linear least
+// squares problem:
+//     minimize || A * X - B ||
+// using a complete orthogonal factorization of A.  A is an M-by-N
+// matrix which may be rank-deficient.
+//
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class DGESVD : Singular value decomposition
+// LAPACK base routine description:
+//
+// DGESVD computes the singular value decomposition (SVD) of a real
+// M-by-N matrix A, optionally computing the left and/or right singular
+//  vectors. The SVD is written
+//
+//       A = U * SIGMA * transpose(V)
+//
+//  where SIGMA is an M-by-N matrix which is zero except for its
+//  min(m,n) diagonal elements, U is an M-by-M orthogonal matrix, and
+//  V is an N-by-N orthogonal matrix.  The diagonal elements of SIGMA
+//  are the singular values of A; they are real and non-negative, and
+//  are returned in descending order.  The first min(m,n) columns of
+//  U and V are the left and right singular vectors of A.
+//
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class DSYEV : Eigensystem of symmetric matrix
+// LAPACK base routine description:
+// DSYEV computes all eigenvalues and, optionally, eigenvectors of a
+// real symmetric matrix A.
+//
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 /*
 #############################################################################
 #
@@ -47,49 +98,14 @@
 namespace SCC
 {
 
-// C++  int    ==  Fortran LOGICAL
-// C++  long   ==  Fortran INTEGER
-// C++  double ==  Fortran DOUBLE PRECISION
-
-/*
+/*   Class DGELSY : Least squares solution of A*X = B
+     LAPACK base routine description:
 	 DGELSY computes the minimum-norm solution to a real linear least
      squares problem:
          minimize || A * X - B ||
      using a complete orthogonal factorization of A.  A is an M-by-N
      matrix which may be rank-deficient.
-
-     Several right hand side vectors b and solution vectors x can be
-     handled in a single call; they are stored as the columns of the
-     M-by-NRHS right hand side matrix B and the N-by-NRHS solution
-     matrix X.
-
-     The routine first computes a QR factorization with column pivoting:
-         A * P = Q * [ R11 R12 ]
-                     [  0  R22 ]
-     with R11 defined as the largest leading submatrix whose estimated
-     condition number is less than 1/RCOND.  The order of R11, RANK,
-     is the effective rank of A.
-
-     Then, R22 is considered to be negligible, and R12 is annihilated
-     by orthogonal transformations from the right, arriving at the
-     complete orthogonal factorization:
-        A * P = Q * [ T11 0 ] * Z
-                    [  0  0 ]
-     The minimum-norm solution is then
-        X = P * Z**T [ inv(T11)*Q1**T*B ]
-                     [        0         ]
-     where Q1 consists of the first RANK columns of Q.
-
-     This routine is basically identical to the original xGELSX except
-     three differences:
-       o The call to the subroutine xGEQPF has been substituted by the
-         the call to the subroutine xGEQP3. This subroutine is a Blas-3
-         version of the QR factorization with column pivoting.
-       o Matrix B (the right hand side) is updated with Blas-3.
-       o The permutation of matrix B (the right hand side) is faster and
-         more simple.
- */
-
+*/
 class DGELSY
 {
 public:
@@ -125,9 +141,6 @@ public:
     {
     return RANK;
     }
-
-
-
 
 	std::vector<double> qrSolve(const std::vector<double>& B, const LapackMatrix& A, double rcondCutoff = -1.0)
 	{
@@ -253,24 +266,22 @@ public:
     bool overwriteExtDataFlag;
 };
 /*
-*> DGESVD computes the singular value decomposition (SVD) of a real
-*> M-by-N matrix A, optionally computing the left and/or right singular
-*> vectors. The SVD is written
-*>
-*>      A = U * SIGMA * transpose(V)
-*>
-*> where SIGMA is an M-by-N matrix which is zero except for its
-*> min(m,n) diagonal elements, U is an M-by-M orthogonal matrix, and
-*> V is an N-by-N orthogonal matrix.  The diagonal elements of SIGMA
-*> are the singular values of A; they are real and non-negative, and
-*> are returned in descending order.  The first min(m,n) columns of
-*> U and V are the left and right singular vectors of A.
-*>
-*> Note that the routine returns V**T, not V.
-*>
-*> SUBROUTINE DGESVD( JOBU, JOBVT, M, N, A, LDA, S, U, LDU, VT, LDVT,
-*> WORK, LWORK, INFO )
-*>
+* Class DGESVD : Singular value decomposition
+* LAPACK base routine description:
+* DGESVD computes the singular value decomposition (SVD) of a real
+* M-by-N matrix A, optionally computing the left and/or right singular
+* vectors. The SVD is written
+*
+*      A = U * SIGMA * transpose(V)
+*
+* where SIGMA is an M-by-N matrix which is zero except for its
+* min(m,n) diagonal elements, U is an M-by-M orthogonal matrix, and
+* V is an N-by-N orthogonal matrix.  The diagonal elements of SIGMA
+* are the singular values of A; they are real and non-negative, and
+* are returned in descending order.  The first min(m,n) columns of
+* U and V are the left and right singular vectors of A.
+*
+* Note that the routine returns V**T, not V.
 */
 class DGESVD
 {
@@ -374,7 +385,6 @@ public:
 		// Second call to create svd
 
 	    INFO       = 0;
-
 	    dgesvd_(&JOBU, &JOBVT, &M, &N, this->A.dataPtr, &LDA, &singularValues[0], U.dataPtr, &LDU, VT.dataPtr, &LDVT,
                WORKptr, &LWORK, &INFO);
 
@@ -590,51 +600,20 @@ public:
 
     SCC::LapackMatrix     VT;
 
-	char                JOBU;
-	char               JOBVT;
-	long                INFO;
-	std::vector<double>      WORK;
+	char                 JOBU;
+	char                JOBVT;
+	long                 INFO;
+	std::vector<double>  WORK;
 
 	long               svdDim;
 	bool overwriteExtDataFlag;
 };
 
-
-
-/*
-   Upon construction or initialization with an input LapackMatrix instance A
-   this class provides an interface to various methods for computing 
-   the solution of A * X = B 
-
- */
-
-
-// Calling Fortran versions directly using appropriately modified prototypes.
+// Class DSYEV : eigensystem computation of real symmetric matrix.
+// LAPACK base routine description:
+// DSYEV computes all eigenvalues and, optionally, eigenvectors of a
+// real symmetric matrix A.
 //
-
-// Data type mapping used:
-//
-// C++  int    ==  Fortran LOGICAL
-// C++  long   ==  Fortran INTEGER
-// C++  double ==  Fortran DOUBLE PRECISION
-//
-// Linking to the Fortran routines  using -llapack -lblas
-//
-// Oct. 15, 2016
-//
-
-
-/*
-*       SUBROUTINE DSYEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, INFO )
-*
-*
-*       extern "C" void dsyev_(char* JOBZ,char* UPLO, long*N, double* Aptr, long* LDA, double* Wptr,
-*		double* WORKptr, long* LWORK, long* INFO);
-*
-*
-*/
-
-
 class DSYEV
 {
 public:
@@ -1780,8 +1759,354 @@ public :
 
 } // End of SCC Namespace declaration
 
-//
-// Lapack documentation
+/////////////////////////////////////////////////////////////////////////////
+// LAPACK documentation
+
+/*
+subroutine dgelsy	(	integer 	m,
+integer 	n,
+integer 	nrhs,
+double precision, dimension( lda, * ) 	a,
+integer 	lda,
+double precision, dimension( ldb, * ) 	b,
+integer 	ldb,
+integer, dimension( * ) 	jpvt,
+double precision 	rcond,
+integer 	rank,
+double precision, dimension( * ) 	work,
+integer 	lwork,
+integer 	info
+)
+DGELSY solves overdetermined or underdetermined systems for GE matrices
+
+
+
+Purpose:
+ DGELSY computes the minimum-norm solution to a real linear least
+ squares problem:
+     minimize || A * X - B ||
+ using a complete orthogonal factorization of A.  A is an M-by-N
+ matrix which may be rank-deficient.
+
+ Several right hand side vectors b and solution vectors x can be
+ handled in a single call; they are stored as the columns of the
+ M-by-NRHS right hand side matrix B and the N-by-NRHS solution
+ matrix X.
+
+ The routine first computes a QR factorization with column pivoting:
+     A * P = Q * [ R11 R12 ]
+                 [  0  R22 ]
+ with R11 defined as the largest leading submatrix whose estimated
+ condition number is less than 1/RCOND.  The order of R11, RANK,
+ is the effective rank of A.
+
+ Then, R22 is considered to be negligible, and R12 is annihilated
+ by orthogonal transformations from the right, arriving at the
+ complete orthogonal factorization:
+    A * P = Q * [ T11 0 ] * Z
+                [  0  0 ]
+ The minimum-norm solution is then
+    X = P * Z**T [ inv(T11)*Q1**T*B ]
+                 [        0         ]
+ where Q1 consists of the first RANK columns of Q.
+
+ This routine is basically identical to the original xGELSX except
+ three differences:
+   o The call to the subroutine xGEQPF has been substituted by the
+     the call to the subroutine xGEQP3. This subroutine is a Blas-3
+     version of the QR factorization with column pivoting.
+   o Matrix B (the right hand side) is updated with Blas-3.
+   o The permutation of matrix B (the right hand side) is faster and
+     more simple.
+Parameters
+[in]	M
+          M is INTEGER
+          The number of rows of the matrix A.  M >= 0.
+[in]	N
+          N is INTEGER
+          The number of columns of the matrix A.  N >= 0.
+[in]	NRHS
+          NRHS is INTEGER
+          The number of right hand sides, i.e., the number of
+          columns of matrices B and X. NRHS >= 0.
+[in,out]	A
+          A is DOUBLE PRECISION array, dimension (LDA,N)
+          On entry, the M-by-N matrix A.
+          On exit, A has been overwritten by details of its
+          complete orthogonal factorization.
+[in]	LDA
+          LDA is INTEGER
+          The leading dimension of the array A.  LDA >= max(1,M).
+[in,out]	B
+          B is DOUBLE PRECISION array, dimension (LDB,NRHS)
+          On entry, the M-by-NRHS right hand side matrix B.
+          On exit, the N-by-NRHS solution matrix X.
+          If M = 0 or N = 0, B is not referenced.
+[in]	LDB
+          LDB is INTEGER
+          The leading dimension of the array B. LDB >= max(1,M,N).
+[in,out]	JPVT
+          JPVT is INTEGER array, dimension (N)
+          On entry, if JPVT(i) .ne. 0, the i-th column of A is permuted
+          to the front of AP, otherwise column i is a free column.
+          On exit, if JPVT(i) = k, then the i-th column of AP
+          was the k-th column of A.
+[in]	RCOND
+          RCOND is DOUBLE PRECISION
+          RCOND is used to determine the effective rank of A, which
+          is defined as the order of the largest leading triangular
+          submatrix R11 in the QR factorization with pivoting of A,
+          whose estimated condition number < 1/RCOND.
+[out]	RANK
+          RANK is INTEGER
+          The effective rank of A, i.e., the order of the submatrix
+          R11.  This is the same as the order of the submatrix T11
+          in the complete orthogonal factorization of A.
+          If NRHS = 0, RANK = 0 on output.
+[out]	WORK
+          WORK is DOUBLE PRECISION array, dimension (MAX(1,LWORK))
+          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+[in]	LWORK
+          LWORK is INTEGER
+          The dimension of the array WORK.
+          The unblocked strategy requires that:
+             LWORK >= MAX( MN+3*N+1, 2*MN+NRHS ),
+          where MN = min( M, N ).
+          The block algorithm requires that:
+             LWORK >= MAX( MN+2*N+NB*(N+1), 2*MN+NB*NRHS ),
+          where NB is an upper bound on the blocksize returned
+          by ILAENV for the routines DGEQP3, DTZRZF, STZRQF, DORMQR,
+          and DORMRZ.
+
+          If LWORK = -1, then a workspace query is assumed; the routine
+          only calculates the optimal size of the WORK array, returns
+          this value as the first entry of the WORK array, and no error
+          message related to LWORK is issued by XERBLA.
+[out]	INFO
+          INFO is INTEGER
+          = 0: successful exit
+          < 0: If INFO = -i, the i-th argument had an illegal value.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+*/
+
+/*
+DGESVD computes the singular value decomposition (SVD) for GE matrices
+
+subroutine dgesvd	(	character 	jobu,
+character 	jobvt,
+integer 	m,
+integer 	n,
+double precision, dimension( lda, * ) 	a,
+integer 	lda,
+double precision, dimension( * ) 	s,
+double precision, dimension( ldu, * ) 	u,
+integer 	ldu,
+double precision, dimension( ldvt, * ) 	vt,
+integer 	ldvt,
+double precision, dimension( * ) 	work,
+integer 	lwork,
+integer 	info
+)
+
+Purpose:
+ DGESVD computes the singular value decomposition (SVD) of a real
+ M-by-N matrix A, optionally computing the left and/or right singular
+ vectors. The SVD is written
+
+      A = U * SIGMA * transpose(V)
+
+ where SIGMA is an M-by-N matrix which is zero except for its
+ min(m,n) diagonal elements, U is an M-by-M orthogonal matrix, and
+ V is an N-by-N orthogonal matrix.  The diagonal elements of SIGMA
+ are the singular values of A; they are real and non-negative, and
+ are returned in descending order.  The first min(m,n) columns of
+ U and V are the left and right singular vectors of A.
+
+ Note that the routine returns V**T, not V.
+Parameters
+[in]	JOBU
+          JOBU is CHARACTER*1
+          Specifies options for computing all or part of the matrix U:
+          = 'A':  all M columns of U are returned in array U:
+          = 'S':  the first min(m,n) columns of U (the left singular
+                  vectors) are returned in the array U;
+          = 'O':  the first min(m,n) columns of U (the left singular
+                  vectors) are overwritten on the array A;
+          = 'N':  no columns of U (no left singular vectors) are
+                  computed.
+[in]	JOBVT
+          JOBVT is CHARACTER*1
+          Specifies options for computing all or part of the matrix
+          V**T:
+          = 'A':  all N rows of V**T are returned in the array VT;
+          = 'S':  the first min(m,n) rows of V**T (the right singular
+                  vectors) are returned in the array VT;
+          = 'O':  the first min(m,n) rows of V**T (the right singular
+                  vectors) are overwritten on the array A;
+          = 'N':  no rows of V**T (no right singular vectors) are
+                  computed.
+
+          JOBVT and JOBU cannot both be 'O'.
+[in]	M
+          M is INTEGER
+          The number of rows of the input matrix A.  M >= 0.
+[in]	N
+          N is INTEGER
+          The number of columns of the input matrix A.  N >= 0.
+[in,out]	A
+          A is DOUBLE PRECISION array, dimension (LDA,N)
+          On entry, the M-by-N matrix A.
+          On exit,
+          if JOBU = 'O',  A is overwritten with the first min(m,n)
+                          columns of U (the left singular vectors,
+                          stored columnwise);
+          if JOBVT = 'O', A is overwritten with the first min(m,n)
+                          rows of V**T (the right singular vectors,
+                          stored rowwise);
+          if JOBU .ne. 'O' and JOBVT .ne. 'O', the contents of A
+                          are destroyed.
+[in]	LDA
+          LDA is INTEGER
+          The leading dimension of the array A.  LDA >= max(1,M).
+[out]	S
+          S is DOUBLE PRECISION array, dimension (min(M,N))
+          The singular values of A, sorted so that S(i) >= S(i+1).
+[out]	U
+          U is DOUBLE PRECISION array, dimension (LDU,UCOL)
+          (LDU,M) if JOBU = 'A' or (LDU,min(M,N)) if JOBU = 'S'.
+          If JOBU = 'A', U contains the M-by-M orthogonal matrix U;
+          if JOBU = 'S', U contains the first min(m,n) columns of U
+          (the left singular vectors, stored columnwise);
+          if JOBU = 'N' or 'O', U is not referenced.
+[in]	LDU
+          LDU is INTEGER
+          The leading dimension of the array U.  LDU >= 1; if
+          JOBU = 'S' or 'A', LDU >= M.
+[out]	VT
+          VT is DOUBLE PRECISION array, dimension (LDVT,N)
+          If JOBVT = 'A', VT contains the N-by-N orthogonal matrix
+          V**T;
+          if JOBVT = 'S', VT contains the first min(m,n) rows of
+          V**T (the right singular vectors, stored rowwise);
+          if JOBVT = 'N' or 'O', VT is not referenced.
+[in]	LDVT
+          LDVT is INTEGER
+          The leading dimension of the array VT.  LDVT >= 1; if
+          JOBVT = 'A', LDVT >= N; if JOBVT = 'S', LDVT >= min(M,N).
+[out]	WORK
+          WORK is DOUBLE PRECISION array, dimension (MAX(1,LWORK))
+          On exit, if INFO = 0, WORK(1) returns the optimal LWORK;
+          if INFO > 0, WORK(2:MIN(M,N)) contains the unconverged
+          superdiagonal elements of an upper bidiagonal matrix B
+          whose diagonal is in S (not necessarily sorted). B
+          satisfies A = U * B * VT, so it has the same singular values
+          as A, and singular vectors related by U and VT.
+[in]	LWORK
+          LWORK is INTEGER
+          The dimension of the array WORK.
+          LWORK >= MAX(1,5*MIN(M,N)) for the paths (see comments inside code):
+             - PATH 1  (M much larger than N, JOBU='N')
+             - PATH 1t (N much larger than M, JOBVT='N')
+          LWORK >= MAX(1,3*MIN(M,N) + MAX(M,N),5*MIN(M,N)) for the other paths
+          For good performance, LWORK should generally be larger.
+
+          If LWORK = -1, then a workspace query is assumed; the routine
+          only calculates the optimal size of the WORK array, returns
+          this value as the first entry of the WORK array, and no error
+          message related to LWORK is issued by XERBLA.
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit.
+          < 0:  if INFO = -i, the i-th argument had an illegal value.
+          > 0:  if DBDSQR did not converge, INFO specifies how many
+                superdiagonals of an intermediate bidiagonal form B
+                did not converge to zero. See the description of WORK
+                above for details.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+
+*/
+
+/*
+DSYEV computes the eigenvalues and, optionally, the left and/or right eigenvectors for SY matrices
+dsyev()
+subroutine dsyev	(	character 	jobz,
+character 	uplo,
+integer 	n,
+double precision, dimension( lda, * ) 	a,
+integer 	lda,
+double precision, dimension( * ) 	w,
+double precision, dimension( * ) 	work,
+integer 	lwork,
+integer 	info
+)
+
+Purpose:
+ DSYEV computes all eigenvalues and, optionally, eigenvectors of a
+ real symmetric matrix A.
+Parameters
+[in]	JOBZ
+          JOBZ is CHARACTER*1
+          = 'N':  Compute eigenvalues only;
+          = 'V':  Compute eigenvalues and eigenvectors.
+[in]	UPLO
+          UPLO is CHARACTER*1
+          = 'U':  Upper triangle of A is stored;
+          = 'L':  Lower triangle of A is stored.
+[in]	N
+          N is INTEGER
+          The order of the matrix A.  N >= 0.
+[in,out]	A
+          A is DOUBLE PRECISION array, dimension (LDA, N)
+          On entry, the symmetric matrix A.  If UPLO = 'U', the
+          leading N-by-N upper triangular part of A contains the
+          upper triangular part of the matrix A.  If UPLO = 'L',
+          the leading N-by-N lower triangular part of A contains
+          the lower triangular part of the matrix A.
+          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
+          orthonormal eigenvectors of the matrix A.
+          If JOBZ = 'N', then on exit the lower triangle (if UPLO='L')
+          or the upper triangle (if UPLO='U') of A, including the
+          diagonal, is destroyed.
+[in]	LDA
+          LDA is INTEGER
+          The leading dimension of the array A.  LDA >= max(1,N).
+[out]	W
+          W is DOUBLE PRECISION array, dimension (N)
+          If INFO = 0, the eigenvalues in ascending order.
+[out]	WORK
+          WORK is DOUBLE PRECISION array, dimension (MAX(1,LWORK))
+          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+[in]	LWORK
+          LWORK is INTEGER
+          The length of the array WORK.  LWORK >= max(1,3*N-1).
+          For optimal efficiency, LWORK >= (NB+2)*N,
+          where NB is the blocksize for DSYTRD returned by ILAENV.
+
+          If LWORK = -1, then a workspace query is assumed; the routine
+          only calculates the optimal size of the WORK array, returns
+          this value as the first entry of the WORK array, and no error
+          message related to LWORK is issued by XERBLA.
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -i, the i-th argument had an illegal value
+          > 0:  if INFO = i, the algorithm failed to converge; i
+                off-diagonal elements of an intermediate tridiagonal
+                form did not converge to zero.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+ */
 /*
 subroutine dgesvx 	( 	character  	fact,
 		character  	trans,

@@ -3,18 +3,29 @@
  *
  *  Created on: Aug 17, 2018
  *      Author: anderson
+ *
+ *  Updated   : Dec. 9, 2023 (C.R. Anderson)
  */
 //
-// This class wraps a SCC::LapackMatrix instance that contains
-// an N x N banded matrix stored using the Lapack band storage
-// convention.
+// Instances of this class are N x N banded matrices with double entries
+// that are specified with three parameters:
 //
 // kl = lower bandwidth
 // ku = upper bandwidth
 //  N = system size
 //
-// The indexing for the access operator(i,j) starts at 0, so that it
-// is consistent with the indexing of the LapackMatrix class.
+//
+// The indexing for the access operator()(i,j) starts at 0, consistent 
+// with the indexing of the other LapackInterface matrix classes.
+//
+// When complied with the _DEBUG pre-processor directive, then index checking 
+// is performed so that if an element is sought that is outside of the specification 
+// of the band matrix structure and exception is triggered (using assert(...)). 
+//
+// Internally the matrix data is stored as a SCC::LapackMatrixCmplx16 
+// instance that contains the matrix data stored using the Lapack band 
+// storage convention, so that LAPACK band matrix routines can be
+// invoked without having to transform the matrix data. 
 //
 // Typical use case consists of initializing an instance
 // then setting values of the banded matrix using the
@@ -26,12 +37,11 @@
 //
 // Bounds checking is only done if _DEBUG is defined
 //
-//
-//
+// Lapack routine dependencies : dgbmv_
 /*
 #############################################################################
 #
-# Copyright 2018 Chris Anderson
+# Copyright 2018- Chris Anderson
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the Lesser GNU General Public License as published by
@@ -58,27 +68,12 @@
 #endif
 
 #include <cmath>
+
+#include "SCC_LapackHeaders.h"
 #include "SCC_LapackMatrix.h"
 
 #ifndef SCC_LAPACK_BAND_MATRIX_
 #define SCC_LAPACK_BAND_MATRIX_
-
-//
-// Prototypes for the only LAPACK BLAS routine used by this class
-//
-/*
- DGBMV  performs one of the matrix-vector operations
-
-    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,
-
- where alpha and beta are scalars, x and y are vectors and A is an
- m by n band matrix, with kl sub-diagonals and ku super-diagonals.
-*/
-
-extern "C" void dgbmv_(char* TRANS, long* M, long* N, long* kl, long* ku, double* alpha, double* Aptr,
-                       long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
-
-
 
 namespace SCC
 {

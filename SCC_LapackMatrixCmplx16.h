@@ -3,25 +3,27 @@
  *
  *  Modified on: June 1, 2023
  *      Author: anderson
+ *   Updated   : Dec. 9, 2023 (C.R. Anderson)
  */
 //
 // A matrix class to facilitate the use of LAPACK routines for COMPLEX*16 Fortran data
 // types.
 //
-//                       ----->  BETA version <-----
 //
 // The data for the matrix is stored by columns (Fortran convention) with each complex matrix
 // element value stored as alternating doubles containing the real and imaginary part of that
 // value.
 //
-// It is assumed that the data storate for std::complex<double> contains the
+// It is assumed that the data storage for std::complex<double> contains the
 // real and imaginary components in adjacent memory location with the real component
 // first. In addition it is assumed that the data for a std::vector<std::complex<double>
 // is stored in contiguous memory locations with double values for the real and imaginary
 // and compoments alternating, e.g. the storage convention used by FORTRAN for complex*16.
 //
-// Internally the data storage uses an SCC::LapackMatrix to faciliate the implementation
+// Internally the data storage uses an SCC::LapackMatrix to facilitate the implementation
 // of algebraic operations.
+//
+// Lapack routine dependencies : zgemm_ and zgemv_
 /*
 #############################################################################
 #
@@ -42,21 +44,15 @@
 #
 #############################################################################
 */
+
+#include "LapackInterface/SCC_LapackHeaders.h"
 #include "LapackInterface/SCC_LapackMatrix.h"
+
 #include <complex>
 #include <cassert>
 
 #ifndef LAPACK_MATRIX_CMPLX_16_H_
 #define LAPACK_MATRIX_CMPLX_16_H_
-
-//
-// Prototypes for the only two LAPACK BLAS routines used by this class
-//
-extern "C" void zgemm_(char* TRANSA,char* TRANSB,long* M, long*N ,long* K,double* ALPHA,
-                       double* A,long* LDA,double* B, long* LDB,double* BETA,double* C,long* LDC);
-
-extern "C" void zgemv_(char* TRANS, long* M, long* N, double* alpha, double* Aptr,
-                       long* LDA, double* Xptr, long* INCX, double* BETA, double* Yptr, long* INCY);
 
 namespace SCC
 {
