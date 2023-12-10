@@ -96,6 +96,9 @@ extern "C"  void dsyevx_(char*JOBZ, char* RANGE, char* UPLO,long* N, double* A, 
                          long*   IL, long*   IU, double*   ABSTOL, long*   M, double* W, double* Z, long* LDZ,
                          double* WORK, long * LWORK, long* IWORK, long* IFAIL, long* INFO);
 
+// double symmetric positive definite (Choleski factorization)
+extern "C" void dposv_(char* UPLO, long* N, long* NRHS, double* Aptr, long* LDA, double* Bptr, long* LDB, long* INFO);
+
 // complex general 
 
 extern "C" void zgesvx_(char* FACT, char* TRANS, long* N, long* NRHS, double* Aptr, long* LDA, double* AFptr, long* LDAF, long* IPIVptr,
@@ -172,6 +175,8 @@ extern "C" void dgesvd_(char* JOBU,char* JOBVT, long* M, long* N, double* APtr, 
                        double* WORKtmp, long* LWORK, long* INFO);
 
 // LU factorization
+
+
 
 // double general tri-diaognal (create factors)
 extern "C" int dgttrf_(long* N, double* DL,double* D, double* DU, double* DU2, long* IPIV,long* INFO);
