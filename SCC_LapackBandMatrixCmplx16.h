@@ -314,6 +314,11 @@ class LapackBandMatrixCmplx16
     }
 
 
+    //
+    // The only complex band matrix * matrix operation
+    // allowed is a band matrix times a matrix with a
+    // single column
+    //
     LapackMatrixCmplx16 operator*(const LapackMatrixCmplx16& x)
     {
     assert(sizecheckNx1(x.rows,x.cols));
@@ -321,13 +326,33 @@ class LapackBandMatrixCmplx16
 	LapackMatrixCmplx16 y(x.rows,1);
 
     char TRANS     = 'N';
-    double ALPHA   = 1.0;
-    double BETA    = 0.0;
+    std::complex<double> ALPHA   = {1.0,0.0};
+    std::complex<double> BETA    = {0.0,0.0};
     long INCX      = 1;
     long INCY      = 1;
     long LDA       = kl + ku + 1;
 
-    zgbmv_(&TRANS,&N,&N, &kl, &ku,&ALPHA,this->cmplxMdata.mData.dataPtr, &LDA, x.mData.dataPtr,&INCX,&BETA,y.mData.dataPtr,&INCY);
+    zgbmv_(&TRANS,&N,&N, &kl, &ku,reinterpret_cast<double*>(const_cast< std::complex<double>* >(&ALPHA)),
+    this->cmplxMdata.mData.dataPtr, &LDA, x.mData.dataPtr,&INCX,reinterpret_cast<double*>(const_cast< std::complex<double>* >(&BETA)),y.mData.dataPtr,&INCY);
+	return y;
+}
+
+std::vector< std::complex<double> > operator*(const std::vector< std::complex<double> >& x)
+{
+	std::vector< std::complex<double> > y(N,0.0);
+
+    char TRANS     = 'N';
+    std::complex<double> ALPHA   = {1.0,0.0};
+    std::complex<double> BETA    = {0.0,0.0};
+    long INCX      = 1;
+    long INCY      = 1;
+    long LDA       = kl + ku + 1;
+
+    zgbmv_(&TRANS,&N,&N, &kl, &ku,
+    reinterpret_cast<double*>(const_cast< std::complex<double>* >(&ALPHA)),this->cmplxMdata.mData.dataPtr, &LDA,
+    reinterpret_cast<double*>(const_cast< std::complex<double>* >(&x[0])),&INCX,
+    reinterpret_cast<double*>(const_cast< std::complex<double>* >(&BETA)),
+    reinterpret_cast<double*>(const_cast< std::complex<double>* >(&y[0])),&INCY);
 	return y;
 }
 
@@ -422,5 +447,122 @@ class LapackBandMatrixCmplx16
 
 } // Namespace SCC
 
+// LAPACK documentation
+/*
+ubroutine zgbmv	(	character 	trans,
+integer 	m,
+integer 	n,
+integer 	kl,
+integer 	ku,
+complex*16 	alpha,
+complex*16, dimension(lda,*) 	a,
+integer 	lda,
+complex*16, dimension(*) 	x,
+integer 	incx,
+complex*16 	beta,
+complex*16, dimension(*) 	y,
+integer 	incy
+)
+ZGBMV
+
+Purpose:
+ ZGBMV  performs one of the matrix-vector operations
+
+    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,   or
+
+    y := alpha*A**H*x + beta*y,
+
+ where alpha and beta are scalars, x and y are vectors and A is an
+ m by n band matrix, with kl sub-diagonals and ku super-diagonals.
+Parameters
+[in]	TRANS
+          TRANS is CHARACTER*1
+           On entry, TRANS specifies the operation to be performed as
+           follows:
+
+              TRANS = 'N' or 'n'   y := alpha*A*x + beta*y.
+
+              TRANS = 'T' or 't'   y := alpha*A**T*x + beta*y.
+
+              TRANS = 'C' or 'c'   y := alpha*A**H*x + beta*y.
+[in]	M
+          M is INTEGER
+           On entry, M specifies the number of rows of the matrix A.
+           M must be at least zero.
+[in]	N
+          N is INTEGER
+           On entry, N specifies the number of columns of the matrix A.
+           N must be at least zero.
+[in]	KL
+          KL is INTEGER
+           On entry, KL specifies the number of sub-diagonals of the
+           matrix A. KL must satisfy  0 .le. KL.
+[in]	KU
+          KU is INTEGER
+           On entry, KU specifies the number of super-diagonals of the
+           matrix A. KU must satisfy  0 .le. KU.
+[in]	ALPHA
+          ALPHA is COMPLEX*16
+           On entry, ALPHA specifies the scalar alpha.
+[in]	A
+          A is COMPLEX*16 array, dimension ( LDA, N )
+           Before entry, the leading ( kl + ku + 1 ) by n part of the
+           array A must contain the matrix of coefficients, supplied
+           column by column, with the leading diagonal of the matrix in
+           row ( ku + 1 ) of the array, the first super-diagonal
+           starting at position 2 in row ku, the first sub-diagonal
+           starting at position 1 in row ( ku + 2 ), and so on.
+           Elements in the array A that do not correspond to elements
+           in the band matrix (such as the top left ku by ku triangle)
+           are not referenced.
+           The following program segment will transfer a band matrix
+           from conventional full matrix storage to band storage:
+
+                 DO 20, J = 1, N
+                    K = KU + 1 - J
+                    DO 10, I = MAX( 1, J - KU ), MIN( M, J + KL )
+                       A( K + I, J ) = matrix( I, J )
+              10    CONTINUE
+              20 CONTINUE
+[in]	LDA
+          LDA is INTEGER
+           On entry, LDA specifies the first dimension of A as declared
+           in the calling (sub) program. LDA must be at least
+           ( kl + ku + 1 ).
+[in]	X
+          X is COMPLEX*16 array, dimension at least
+           ( 1 + ( n - 1 )*abs( INCX ) ) when TRANS = 'N' or 'n'
+           and at least
+           ( 1 + ( m - 1 )*abs( INCX ) ) otherwise.
+           Before entry, the incremented array X must contain the
+           vector x.
+[in]	INCX
+          INCX is INTEGER
+           On entry, INCX specifies the increment for the elements of
+           X. INCX must not be zero.
+[in]	BETA
+          BETA is COMPLEX*16
+           On entry, BETA specifies the scalar beta. When BETA is
+           supplied as zero then Y need not be set on input.
+[in,out]	Y
+          Y is COMPLEX*16 array, dimension at least
+           ( 1 + ( m - 1 )*abs( INCY ) ) when TRANS = 'N' or 'n'
+           and at least
+           ( 1 + ( n - 1 )*abs( INCY ) ) otherwise.
+           Before entry, the incremented array Y must contain the
+           vector y. On exit, Y is overwritten by the updated vector y.
+           If either m or n is zero, then Y not referenced and the function
+           performs a quick return.
+[in]	INCY
+          INCY is INTEGER
+           On entry, INCY specifies the increment for the elements of
+           Y. INCY must not be zero.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+
+ */
 
 #endif /* SCC_LapackBandMatrixCmplx16 */

@@ -6,7 +6,43 @@
  *
  *  Updated: Dec. 8, 2023 (C.R. Anderson)
  */
+//
+// SCC::LapackBandMatrixRoutines
+//
+// A collection of utility classes whose functionality is
+// based upon LAPACK routines. These routines are meant
+// to be used with instances of LapackBandMatrix. The documentation
+// for the each of the base LAPACK routines is contained at the
+// end of this file or can be found at
+//
+// https://netlib.org/lapack/explore-html
+//
+// These classes do not provide the complete functionality of the
+// LAPACK routines upon which they are based -- only the
+// functionality as needed for specific project use, functionality
+// that may be updated without notice.
+//
+// Data mapping being used for direct invocation of
+// Fortran routines
+//
+// C++  int    ==  Fortran LOGICAL
+// C++  long   ==  Fortran INTEGER
+// C++  double ==  Fortran DOUBLE PRECISION
+//
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Current class list
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class DGBSVX : Created for solving A*X = B using LU factorization
+//                when A is a band matrix.
+// LAPACK base routine description:
+// DGBSVX uses the LU factorization to compute the solution to a real
+// system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
+// where A is a band matrix of order N with KL subdiagonals and KU
+// superdiagonals, and X and B are N-by-NRHS matrices.
 
+// Error bounds on the solution and a condition estimate are also
+// provided.
 /*
 #############################################################################
 #
@@ -50,16 +86,18 @@
 namespace SCC
 {
 
-/*
-*  DGBSVX uses the LU factorization to compute the solution to a real
-*  system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
-*  where A is a band matrix of order N with KL subdiagonals and KU
-*  superdiagonals, and X and B are N-by-NRHS matrices.
-*
-*  Error bounds on the solution and a condition estimate are also
-*  provided.
-*
-*/
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Class DGBSVX : Created for solving A*X = B using LU factorization
+//                when A is a band matrix.
+// LAPACK base routine description:
+// DGBSVX uses the LU factorization to compute the solution to a real
+// system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
+// where A is a band matrix of order N with KL subdiagonals and KU
+// superdiagonals, and X and B are N-by-NRHS matrices.
+
+// Error bounds on the solution and a condition estimate are also
+// provided.
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 class DGBSVX
 {
@@ -337,9 +375,12 @@ bool sizecheckNx1(long bandDim, long rows, long cols)  const {return true;}
 
 
 //
-// Lapack documentation
+// LAPACK documentation
+//
+/////////////////////////////////////////////////////////////////////////////
+// DGBSVX
+/////////////////////////////////////////////////////////////////////////////
 /*
- *
 subroutine dgbsvx 	( 	character  	fact,
 		character  	trans,
 		integer  	n,

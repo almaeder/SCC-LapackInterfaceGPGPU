@@ -4,7 +4,44 @@
  *  Created on: Dec. 3, 2023
  *      Author: anderson
  */
-
+//
+// SCC::LapackBandMatrixRoutinesCmplx16
+//
+// A collection of utility classes whose functionality is
+// based upon LAPACK routines. These routines are meant
+// to be used with instances of LapackBandMatrixCmplx16. The documentation
+// for the each of the base LAPACK routines is contained at the
+// end of this file or can be found at
+//
+// https://netlib.org/lapack/explore-html
+//
+// These classes do not provide the complete functionality of the
+// LAPACK routines upon which they are based -- only the
+// functionality as needed for specific project use, functionality
+// that may be updated without notice.
+//
+// Data mapping being used for direct invocation of
+// Fortran routines
+//
+// C++  int                 ==  Fortran LOGICAL
+// C++  long                ==  Fortran INTEGER
+// C++  double              ==  Fortran DOUBLE PRECISION
+// C++ std::complex<double> ==  Fortran COMPLEX*16
+//
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Current class list
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class ZGBSVX : Created for solving A*X = B using LU factorization
+//                when A is a complex band matrix.
+// LAPACK base routine description:
+// ZGBSVX uses the LU factorization to compute the solution to a complex
+// system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
+// where A is a band matrix of order N with KL subdiagonals and KU
+// superdiagonals, and X and B are N-by-NRHS matrices.
+//
+// Error bounds on the solution and a condition estimate are also
+// provided.
 /*
 #############################################################################
 #
@@ -40,15 +77,19 @@
 namespace SCC
 {
 
-/*
- ZGBSVX uses the LU factorization to compute the solution to a complex
- system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
- where A is a band matrix of order N with KL subdiagonals and KU
- superdiagonals, and X and B are N-by-NRHS matrices.
 
- Error bounds on the solution and a condition estimate are also
- provided.
-*/
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Class ZGBSVX : Created for solving A*X = B using LU factorization
+//                when A is a complex band matrix.
+// LAPACK base routine description:
+// ZGBSVX uses the LU factorization to compute the solution to a complex
+// system of linear equations A * X = B, A**T * X = B, or A**H * X = B,
+// where A is a band matrix of order N with KL subdiagonals and KU
+// superdiagonals, and X and B are N-by-NRHS matrices.
+//
+// Error bounds on the solution and a condition estimate are also
+// provided.
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 class ZGBSVX
 {
@@ -230,6 +271,9 @@ public:
 //
 // LAPACK documentation
 //
+/////////////////////////////////////////////////////////////////////////////
+// ZGBSVX
+/////////////////////////////////////////////////////////////////////////////
 /*
 subroutine zgbsvx 	( 	character  	fact,
 		character  	trans,

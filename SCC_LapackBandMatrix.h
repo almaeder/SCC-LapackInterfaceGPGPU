@@ -275,7 +275,11 @@ class LapackBandMatrix
     	return std::sqrt(valSum);
     }
 
-
+    //
+    // The only band matrix X matrix operation allowed
+    // is a band matrix times a matrix with a single
+    // column
+    //
     LapackMatrix operator*(const LapackMatrix& x)
     {
     assert(sizecheckNx1(x.rows,x.cols));
@@ -299,7 +303,31 @@ class LapackBandMatrix
 
     dgbmv_(&TRANS,&N,&N, &kl, &ku,&ALPHA, mData.dataPtr,&mData.rows, x.dataPtr,&INCX,&BETA,y.dataPtr,&INCY);
 	return y;
-}
+    }
+
+
+    std::vector<double> operator*(const std::vector<double>& x)
+    {
+	std::vector<double> y(N,0.0);
+
+    char TRANS     = 'N';
+    double ALPHA   = 1.0;
+    double BETA    = 0.0;
+    long INCX      = 1;
+    long INCY      = 1;
+
+    /*
+     DGBMV  performs one of the matrix-vector operations
+
+    y := alpha*A*x + beta*y,   or   y := alpha*A**T*x + beta*y,
+
+    where alpha and beta are scalars, x and y are vectors and A is an
+    m by n band matrix, with kl sub-diagonals and ku super-diagonals.
+   */
+
+    dgbmv_(&TRANS,&N,&N, &kl, &ku,&ALPHA, mData.dataPtr,&mData.rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
+	return y;
+    }
 
 
 
@@ -414,6 +442,8 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
 };
 
 } // Namespace SCC
+
+
 
 
 #endif /* SCC_LapackBandMatrix_  */

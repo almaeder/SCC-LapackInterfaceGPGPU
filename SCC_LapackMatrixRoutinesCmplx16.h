@@ -1,38 +1,81 @@
 
+//
+// SCC::LapackBandMatrixRoutinesCmplx16
+//
+// A collection of utility classes whose functionality is
+// based upon LAPACK routines. These routines are meant
+// to be used with instances of LapackMatrixCmplx16. The documentation
+// for the each of the base LAPACK routines is contained at the
+// end of this file or can be found at
+//
+// https://netlib.org/lapack/explore-html
+//
+// These classes do not provide the complete functionality of the
+// LAPACK routines upon which they are based -- only the
+// functionality as needed for specific project use, functionality
+// that may be updated without notice.
+//
+// Data mapping being used for direct invocation of
+// Fortran routines
+//
+// C++  int                 ==  Fortran LOGICAL
+// C++  long                ==  Fortran INTEGER
+// C++  double              ==  Fortran DOUBLE PRECISION
+// C++ std::complex<double> ==  Fortran COMPLEX*16
+//
+//
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Current class list
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class  ZGESVX : Created for solving A*X = B using LU factorization
+//                 when A is a complex matrix.
+// LAPACK base routine description:
+// ZGESVX uses the LU factorization to compute the solution to a complex
+// system of linear equations
+//    A * X = B,
+// where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
+//
+// Error bounds on the solution and a condition estimate are also
+// provided.
+//
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class  ZHPEVX : Created for computing eigensystem components
+//                 of a complex matrix..
+// LAPACK base routine description:
+// ZHPEVX computes selected eigenvalues and, optionally, eigenvectors
+// of a complex Hermitian matrix A in packed storage.
+// Eigenvalues/vectors can be selected by specifying either a range of
+// values or a range of indices for the desired eigenvalues.
+//
+
+
 #include "SCC_LapackHeaders.h"
 #include "SCC_LapackMatrix.h"
-
 #include "SCC_LapackMatrixCmplx16.h"
 
 #include <complex>
 #include <cassert>
 
-// Class wrappers for Lapack routines:  ZGESVX, ZHPEVX
-
-/*
- ZGESVX uses the LU factorization to compute the solution to a complex
- system of linear equations
-    A * X = B,
- where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-
- Error bounds on the solution and a condition estimate are also
- provided.
-*/
-
-/*
- ZHPEVX computes selected eigenvalues and, optionally, eigenvectors
- of a complex Hermitian matrix A in packed storage.
- Eigenvalues/vectors can be selected by specifying either a range of
- values or a range of indices for the desired eigenvalues.
-*/
-
-
 #ifndef SCC_LAPACK_MATRIX_ROUTINES_CMPLX16
 #define SCC_LAPACK_MATRIX_ROUTINES_CMPLX16
 
-
 namespace SCC
 {
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Class  ZGESVX : Created for solving A*X = B using LU factorization
+//                 when A is a complex matrix.
+// LAPACK base routine description:
+// ZGESVX uses the LU factorization to compute the solution to a complex
+// system of linear equations
+//    A * X = B,
+// where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
+//
+// Error bounds on the solution and a condition estimate are also
+// provided.
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
 class ZGESVX
 {
 public:
@@ -51,7 +94,6 @@ public:
 	A.initialize();
 	AF.initialize();
 	}
-
 
     void applyInverse(const LapackMatrixCmplx16& A,std::vector <std::complex<double>>& b)
 	{
@@ -202,6 +244,17 @@ public:
 	LapackMatrixCmplx16      AF;
 
 };
+
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Class  ZHPEVX : Created for computing eigensystem components
+//                 of a complex matrix..
+// LAPACK base routine description:
+// ZHPEVX computes selected eigenvalues and, optionally, eigenvectors
+// of a complex Hermitian matrix A in packed storage.
+// Eigenvalues/vectors can be selected by specifying either a range of
+// values or a range of indices for the desired eigenvalues.
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 class ZHPEVX
 {
@@ -440,8 +493,11 @@ public :
 } // Namespace SCC
 
 //
-// Lapack documentation
+// LAPACK documentation
 //
+/////////////////////////////////////////////////////////////////////////////
+// ZGESVX
+/////////////////////////////////////////////////////////////////////////////
 /*
         subroutine zgesvx 	( 	character  	fact,
 		character  	trans,
@@ -737,7 +793,9 @@ Author
     NAG Ltd.
 */
 
-
+/////////////////////////////////////////////////////////////////////////////
+// ZHPEVX
+/////////////////////////////////////////////////////////////////////////////
 
 /*
 ZHPEVX computes the eigenvalues and, optionally, the left and/or right eigenvectors for OTHER matrices

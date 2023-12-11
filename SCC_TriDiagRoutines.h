@@ -3,7 +3,44 @@
  *
  *  Created on: Jul 4, 2020
  *      Author: anderson
+ *
+ *  Updated on: Dec. 11, 2023 (C.R. Anderson)
  */
+//
+// SCC::TriDiagRoutines
+//
+// A utility class for tri-diagonal matrices whose
+// functionality is based upon LAPACK routines.
+//
+// The documentation for the each of the base LAPACK routines
+// is contained at the end of this file or can be found at
+//
+// https://netlib.org/lapack/explore-html
+//
+// The member functions do not provide the complete functionality of the
+// LAPACK routines upon which they are based -- only the
+// functionality as needed for specific project use, functionality
+// that may be updated without notice.
+//
+// Data mapping being used for direct invocation of
+// Fortran routines
+//
+// C++  int    ==  Fortran LOGICAL
+// C++  long   ==  Fortran INTEGER
+// C++  double ==  Fortran DOUBLE PRECISION
+//
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Current list of LAPACK routines used
+//
+// dgttrf_
+//
+// dgttrs_
+//
+// dsteqr_
+//
+// dstevx_
+//
+// dstebz_
 /*
 #############################################################################
 #
