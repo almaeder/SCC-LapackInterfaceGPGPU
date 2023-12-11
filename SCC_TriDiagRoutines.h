@@ -30,17 +30,24 @@
 // C++  double ==  Fortran DOUBLE PRECISION
 //
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-// Current list of LAPACK routines used
+// Current list of LAPACK routines being used by member functions
+// of the TriDiagRoutines class.
 //
-// dgttrf_
+// DGTTRF : computes an LU factorization of a real tridiagonal matrix A)
 //
-// dgttrs_
+// DGTTRS : solves systems of equations using an LU factorization
+//          (with pivoting) from DGTTRF
 //
-// dsteqr_
+// DSTEQR : computes all eigenvalues and, optionally, eigenvectors of a
+// symmetric tridiagonal matrix using the implicit QL or QR method.
 //
-// dstevx_
+// DSTEVX : computes selected eigenvalues and, optionally, eigenvectors
+//          of a real symmetric tridiagonal matrix A.
 //
-// dstebz_
+// DSTEBZ : computes the eigenvalues of a symmetric tridiagonal
+//          matrix T.  The user may ask for all eigenvalues, all eigenvalues
+//          in the half-open interval (VL, VU], or the IL-th through IU-th
+//          eigenvalues.
 /*
 #############################################################################
 #
@@ -287,7 +294,7 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
 
     /* extract return eigenvalues */
 
-    std::vector<double>     eValsReturn;
+    std::vector<double> eValsReturn;
 
     if(mFound ==  0) {return eValsReturn;}
 
@@ -297,6 +304,7 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
     {
     	eValsReturn[i] = eVals[i];
     }
+
     /* clean up */
 
     delete [] ifail;
@@ -535,6 +543,585 @@ std::vector<double>& D, std::vector<double>& U,std::vector<double>& eigVals)
 }
 };
 }
+
+
+////////////////////////////////////////////////////////////////
+// DGTTRF
+////////////////////////////////////////////////////////////////
+/*
+
+DGTTRF computes an LU factorization of a real tridiagonal matrix A
+
+subroutine dgttrf	(	integer 	n,
+double precision, dimension( * ) 	dl,
+double precision, dimension( * ) 	d,
+double precision, dimension( * ) 	du,
+double precision, dimension( * ) 	du2,
+integer, dimension( * ) 	ipiv,
+integer 	info
+)
+
+Purpose:
+ DGTTRF computes an LU factorization of a real tridiagonal matrix A
+ using elimination with partial pivoting and row interchanges.
+
+ The factorization has the form
+    A = L * U
+ where L is a product of permutation and unit lower bidiagonal
+ matrices and U is upper triangular with nonzeros in only the main
+ diagonal and first two superdiagonals.
+Parameters
+[in]	N
+          N is INTEGER
+          The order of the matrix A.
+[in,out]	DL
+          DL is DOUBLE PRECISION array, dimension (N-1)
+          On entry, DL must contain the (n-1) sub-diagonal elements of
+          A.
+
+          On exit, DL is overwritten by the (n-1) multipliers that
+          define the matrix L from the LU factorization of A.
+[in,out]	D
+          D is DOUBLE PRECISION array, dimension (N)
+          On entry, D must contain the diagonal elements of A.
+
+          On exit, D is overwritten by the n diagonal elements of the
+          upper triangular matrix U from the LU factorization of A.
+[in,out]	DU
+          DU is DOUBLE PRECISION array, dimension (N-1)
+          On entry, DU must contain the (n-1) super-diagonal elements
+          of A.
+
+          On exit, DU is overwritten by the (n-1) elements of the first
+          super-diagonal of U.
+[out]	DU2
+          DU2 is DOUBLE PRECISION array, dimension (N-2)
+          On exit, DU2 is overwritten by the (n-2) elements of the
+          second super-diagonal of U.
+[out]	IPIV
+          IPIV is INTEGER array, dimension (N)
+          The pivot indices; for 1 <= i <= n, row i of the matrix was
+          interchanged with row IPIV(i).  IPIV(i) will always be either
+          i or i+1; IPIV(i) = i indicates a row interchange was not
+          required.
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -k, the k-th argument had an illegal value
+          > 0:  if INFO = k, U(k,k) is exactly zero. The factorization
+                has been completed, but the factor U is exactly
+                singular, and division by zero will occur if it is used
+                to solve a system of equations.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+*/
+
+////////////////////////////////////////////////////////////////
+// DGTTRS
+////////////////////////////////////////////////////////////////
+/*
+DGTTRS solves systems of equations using an LU factorization
+(with pivoting) from DGTTRF
+
+dgttrs()
+subroutine dgttrs	(	character 	trans,
+integer 	n,
+integer 	nrhs,
+double precision, dimension( * ) 	dl,
+double precision, dimension( * ) 	d,
+double precision, dimension( * ) 	du,
+double precision, dimension( * ) 	du2,
+integer, dimension( * ) 	ipiv,
+double precision, dimension( ldb, * ) 	b,
+integer 	ldb,
+integer 	info
+)
+
+
+Purpose:
+ DGTTRS solves one of the systems of equations
+    A*X = B  or  A**T*X = B,
+ with a tridiagonal matrix A using the LU factorization computed
+ by DGTTRF.
+Parameters
+[in]	TRANS
+          TRANS is CHARACTER*1
+          Specifies the form of the system of equations.
+          = 'N':  A * X = B  (No transpose)
+          = 'T':  A**T* X = B  (Transpose)
+          = 'C':  A**T* X = B  (Conjugate transpose = Transpose)
+[in]	N
+          N is INTEGER
+          The order of the matrix A.
+[in]	NRHS
+          NRHS is INTEGER
+          The number of right hand sides, i.e., the number of columns
+          of the matrix B.  NRHS >= 0.
+[in]	DL
+          DL is DOUBLE PRECISION array, dimension (N-1)
+          The (n-1) multipliers that define the matrix L from the
+          LU factorization of A.
+[in]	D
+          D is DOUBLE PRECISION array, dimension (N)
+          The n diagonal elements of the upper triangular matrix U from
+          the LU factorization of A.
+[in]	DU
+          DU is DOUBLE PRECISION array, dimension (N-1)
+          The (n-1) elements of the first super-diagonal of U.
+[in]	DU2
+          DU2 is DOUBLE PRECISION array, dimension (N-2)
+          The (n-2) elements of the second super-diagonal of U.
+[in]	IPIV
+          IPIV is INTEGER array, dimension (N)
+          The pivot indices; for 1 <= i <= n, row i of the matrix was
+          interchanged with row IPIV(i).  IPIV(i) will always be either
+          i or i+1; IPIV(i) = i indicates a row interchange was not
+          required.
+[in,out]	B
+          B is DOUBLE PRECISION array, dimension (LDB,NRHS)
+          On entry, the matrix of right hand side vectors B.
+          On exit, B is overwritten by the solution vectors X.
+[in]	LDB
+          LDB is INTEGER
+          The leading dimension of the array B.  LDB >= max(1,N).
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -i, the i-th argument had an illegal value
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+ */
+////////////////////////////////////////////////////////////////
+// DSTEQR
+////////////////////////////////////////////////////////////////
+/*
+DSTEQR computes all eigenvalues and, optionally, eigenvectors of a
+symmetric tridiagonal matrix.
+
+dsteqr()
+subroutine dsteqr	(	character 	compz,
+integer 	n,
+double precision, dimension( * ) 	d,
+double precision, dimension( * ) 	e,
+double precision, dimension( ldz, * ) 	z,
+integer 	ldz,
+double precision, dimension( * ) 	work,
+integer 	info
+)
+
+
+Purpose:
+ DSTEQR computes all eigenvalues and, optionally, eigenvectors of a
+ symmetric tridiagonal matrix using the implicit QL or QR method.
+ The eigenvectors of a full or band symmetric matrix can also be found
+ if DSYTRD or DSPTRD or DSBTRD has been used to reduce this matrix to
+ tridiagonal form.
+Parameters
+[in]	COMPZ
+          COMPZ is CHARACTER*1
+          = 'N':  Compute eigenvalues only.
+          = 'V':  Compute eigenvalues and eigenvectors of the original
+                  symmetric matrix.  On entry, Z must contain the
+                  orthogonal matrix used to reduce the original matrix
+                  to tridiagonal form.
+          = 'I':  Compute eigenvalues and eigenvectors of the
+                  tridiagonal matrix.  Z is initialized to the identity
+                  matrix.
+[in]	N
+          N is INTEGER
+          The order of the matrix.  N >= 0.
+[in,out]	D
+          D is DOUBLE PRECISION array, dimension (N)
+          On entry, the diagonal elements of the tridiagonal matrix.
+          On exit, if INFO = 0, the eigenvalues in ascending order.
+[in,out]	E
+          E is DOUBLE PRECISION array, dimension (N-1)
+          On entry, the (n-1) subdiagonal elements of the tridiagonal
+          matrix.
+          On exit, E has been destroyed.
+[in,out]	Z
+          Z is DOUBLE PRECISION array, dimension (LDZ, N)
+          On entry, if  COMPZ = 'V', then Z contains the orthogonal
+          matrix used in the reduction to tridiagonal form.
+          On exit, if INFO = 0, then if  COMPZ = 'V', Z contains the
+          orthonormal eigenvectors of the original symmetric matrix,
+          and if COMPZ = 'I', Z contains the orthonormal eigenvectors
+          of the symmetric tridiagonal matrix.
+          If COMPZ = 'N', then Z is not referenced.
+[in]	LDZ
+          LDZ is INTEGER
+          The leading dimension of the array Z.  LDZ >= 1, and if
+          eigenvectors are desired, then  LDZ >= max(1,N).
+[out]	WORK
+          WORK is DOUBLE PRECISION array, dimension (max(1,2*N-2))
+          If COMPZ = 'N', then WORK is not referenced.
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -i, the i-th argument had an illegal value
+          > 0:  the algorithm has failed to find all the eigenvalues in
+                a total of 30*N iterations; if INFO = i, then i
+                elements of E have not converged to zero; on exit, D
+                and E contain the elements of a symmetric tridiagonal
+                matrix which is orthogonally similar to the original
+                matrix.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+ */
+////////////////////////////////////////////////////////////////
+// DSTEVX
+////////////////////////////////////////////////////////////////
+/*
+DSTEVX computes selected eigenvalues and, optionally, eigenvectors
+of a real symmetric tridiagonal matrix A.
+
+
+subroutine dstevx	(	character 	jobz,
+character 	range,
+integer 	n,
+double precision, dimension( * ) 	d,
+double precision, dimension( * ) 	e,
+double precision 	vl,
+double precision 	vu,
+integer 	il,
+integer 	iu,
+double precision 	abstol,
+integer 	m,
+double precision, dimension( * ) 	w,
+double precision, dimension( ldz, * ) 	z,
+integer 	ldz,
+double precision, dimension( * ) 	work,
+integer, dimension( * ) 	iwork,
+integer, dimension( * ) 	ifail,
+integer 	info
+)
+
+Purpose:
+ DSTEVX computes selected eigenvalues and, optionally, eigenvectors
+ of a real symmetric tridiagonal matrix A.  Eigenvalues and
+ eigenvectors can be selected by specifying either a range of values
+ or a range of indices for the desired eigenvalues.
+Parameters
+[in]	JOBZ
+          JOBZ is CHARACTER*1
+          = 'N':  Compute eigenvalues only;
+          = 'V':  Compute eigenvalues and eigenvectors.
+[in]	RANGE
+          RANGE is CHARACTER*1
+          = 'A': all eigenvalues will be found.
+          = 'V': all eigenvalues in the half-open interval (VL,VU]
+                 will be found.
+          = 'I': the IL-th through IU-th eigenvalues will be found.
+[in]	N
+          N is INTEGER
+          The order of the matrix.  N >= 0.
+[in,out]	D
+          D is DOUBLE PRECISION array, dimension (N)
+          On entry, the n diagonal elements of the tridiagonal matrix
+          A.
+          On exit, D may be multiplied by a constant factor chosen
+          to avoid over/underflow in computing the eigenvalues.
+[in,out]	E
+          E is DOUBLE PRECISION array, dimension (max(1,N-1))
+          On entry, the (n-1) subdiagonal elements of the tridiagonal
+          matrix A in elements 1 to N-1 of E.
+          On exit, E may be multiplied by a constant factor chosen
+          to avoid over/underflow in computing the eigenvalues.
+[in]	VL
+          VL is DOUBLE PRECISION
+          If RANGE='V', the lower bound of the interval to
+          be searched for eigenvalues. VL < VU.
+          Not referenced if RANGE = 'A' or 'I'.
+[in]	VU
+          VU is DOUBLE PRECISION
+          If RANGE='V', the upper bound of the interval to
+          be searched for eigenvalues. VL < VU.
+          Not referenced if RANGE = 'A' or 'I'.
+[in]	IL
+          IL is INTEGER
+          If RANGE='I', the index of the
+          smallest eigenvalue to be returned.
+          1 <= IL <= IU <= N, if N > 0; IL = 1 and IU = 0 if N = 0.
+          Not referenced if RANGE = 'A' or 'V'.
+[in]	IU
+          IU is INTEGER
+          If RANGE='I', the index of the
+          largest eigenvalue to be returned.
+          1 <= IL <= IU <= N, if N > 0; IL = 1 and IU = 0 if N = 0.
+          Not referenced if RANGE = 'A' or 'V'.
+[in]	ABSTOL
+          ABSTOL is DOUBLE PRECISION
+          The absolute error tolerance for the eigenvalues.
+          An approximate eigenvalue is accepted as converged
+          when it is determined to lie in an interval [a,b]
+          of width less than or equal to
+
+                  ABSTOL + EPS *   max( |a|,|b| ) ,
+
+          where EPS is the machine precision.  If ABSTOL is less
+          than or equal to zero, then  EPS*|T|  will be used in
+          its place, where |T| is the 1-norm of the tridiagonal
+          matrix.
+
+          Eigenvalues will be computed most accurately when ABSTOL is
+          set to twice the underflow threshold 2*DLAMCH('S'), not zero.
+          If this routine returns with INFO>0, indicating that some
+          eigenvectors did not converge, try setting ABSTOL to
+          2*DLAMCH('S').
+
+          See "Computing Small Singular Values of Bidiagonal Matrices
+          with Guaranteed High Relative Accuracy," by Demmel and
+          Kahan, LAPACK Working Note #3.
+[out]	M
+          M is INTEGER
+          The total number of eigenvalues found.  0 <= M <= N.
+          If RANGE = 'A', M = N, and if RANGE = 'I', M = IU-IL+1.
+[out]	W
+          W is DOUBLE PRECISION array, dimension (N)
+          The first M elements contain the selected eigenvalues in
+          ascending order.
+[out]	Z
+          Z is DOUBLE PRECISION array, dimension (LDZ, max(1,M) )
+          If JOBZ = 'V', then if INFO = 0, the first M columns of Z
+          contain the orthonormal eigenvectors of the matrix A
+          corresponding to the selected eigenvalues, with the i-th
+          column of Z holding the eigenvector associated with W(i).
+          If an eigenvector fails to converge (INFO > 0), then that
+          column of Z contains the latest approximation to the
+          eigenvector, and the index of the eigenvector is returned
+          in IFAIL.  If JOBZ = 'N', then Z is not referenced.
+          Note: the user must ensure that at least max(1,M) columns are
+          supplied in the array Z; if RANGE = 'V', the exact value of M
+          is not known in advance and an upper bound must be used.
+[in]	LDZ
+          LDZ is INTEGER
+          The leading dimension of the array Z.  LDZ >= 1, and if
+          JOBZ = 'V', LDZ >= max(1,N).
+[out]	WORK
+          WORK is DOUBLE PRECISION array, dimension (5*N)
+[out]	IWORK
+          IWORK is INTEGER array, dimension (5*N)
+[out]	IFAIL
+          IFAIL is INTEGER array, dimension (N)
+          If JOBZ = 'V', then if INFO = 0, the first M elements of
+          IFAIL are zero.  If INFO > 0, then IFAIL contains the
+          indices of the eigenvectors that failed to converge.
+          If JOBZ = 'N', then IFAIL is not referenced.
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -i, the i-th argument had an illegal value
+          > 0:  if INFO = i, then i eigenvectors failed to converge.
+                Their indices are stored in array IFAIL.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+*/
+
+////////////////////////////////////////////////////////////////
+// DSTEBZ
+////////////////////////////////////////////////////////////////
+/*
+DSTEBZ computes the eigenvalues of a symmetric tridiagonal
+matrix T.  The user may ask for all eigenvalues, all eigenvalues
+in the half-open interval (VL, VU], or the IL-th through IU-th
+eigenvalues.
+
+subroutine dstebz	(	character 	range,
+character 	order,
+integer 	n,
+double precision 	vl,
+double precision 	vu,
+integer 	il,
+integer 	iu,
+double precision 	abstol,
+double precision, dimension( * ) 	d,
+double precision, dimension( * ) 	e,
+integer 	m,
+integer 	nsplit,
+double precision, dimension( * ) 	w,
+integer, dimension( * ) 	iblock,
+integer, dimension( * ) 	isplit,
+double precision, dimension( * ) 	work,
+integer, dimension( * ) 	iwork,
+integer 	info
+)
+
+
+Purpose:
+ DSTEBZ computes the eigenvalues of a symmetric tridiagonal
+ matrix T.  The user may ask for all eigenvalues, all eigenvalues
+ in the half-open interval (VL, VU], or the IL-th through IU-th
+ eigenvalues.
+
+ To avoid overflow, the matrix must be scaled so that its
+ largest element is no greater than overflow**(1/2) * underflow**(1/4) in absolute value, and for greatest
+ accuracy, it should not be much smaller than that.
+
+ See W. Kahan "Accurate Eigenvalues of a Symmetric Tridiagonal
+ Matrix", Report CS41, Computer Science Dept., Stanford
+ University, July 21, 1966.
+Parameters
+[in]	RANGE
+          RANGE is CHARACTER*1
+          = 'A': ("All")   all eigenvalues will be found.
+          = 'V': ("Value") all eigenvalues in the half-open interval
+                           (VL, VU] will be found.
+          = 'I': ("Index") the IL-th through IU-th eigenvalues (of the
+                           entire matrix) will be found.
+[in]	ORDER
+          ORDER is CHARACTER*1
+          = 'B': ("By Block") the eigenvalues will be grouped by
+                              split-off block (see IBLOCK, ISPLIT) and
+                              ordered from smallest to largest within
+                              the block.
+          = 'E': ("Entire matrix")
+                              the eigenvalues for the entire matrix
+                              will be ordered from smallest to
+                              largest.
+[in]	N
+          N is INTEGER
+          The order of the tridiagonal matrix T.  N >= 0.
+[in]	VL
+          VL is DOUBLE PRECISION
+
+          If RANGE='V', the lower bound of the interval to
+          be searched for eigenvalues.  Eigenvalues less than or equal
+          to VL, or greater than VU, will not be returned.  VL < VU.
+          Not referenced if RANGE = 'A' or 'I'.
+[in]	VU
+          VU is DOUBLE PRECISION
+
+          If RANGE='V', the upper bound of the interval to
+          be searched for eigenvalues.  Eigenvalues less than or equal
+          to VL, or greater than VU, will not be returned.  VL < VU.
+          Not referenced if RANGE = 'A' or 'I'.
+[in]	IL
+          IL is INTEGER
+
+          If RANGE='I', the index of the
+          smallest eigenvalue to be returned.
+          1 <= IL <= IU <= N, if N > 0; IL = 1 and IU = 0 if N = 0.
+          Not referenced if RANGE = 'A' or 'V'.
+[in]	IU
+          IU is INTEGER
+
+          If RANGE='I', the index of the
+          largest eigenvalue to be returned.
+          1 <= IL <= IU <= N, if N > 0; IL = 1 and IU = 0 if N = 0.
+          Not referenced if RANGE = 'A' or 'V'.
+[in]	ABSTOL
+          ABSTOL is DOUBLE PRECISION
+          The absolute tolerance for the eigenvalues.  An eigenvalue
+          (or cluster) is considered to be located if it has been
+          determined to lie in an interval whose width is ABSTOL or
+          less.  If ABSTOL is less than or equal to zero, then ULP*|T|
+          will be used, where |T| means the 1-norm of T.
+
+          Eigenvalues will be computed most accurately when ABSTOL is
+          set to twice the underflow threshold 2*DLAMCH('S'), not zero.
+[in]	D
+          D is DOUBLE PRECISION array, dimension (N)
+          The n diagonal elements of the tridiagonal matrix T.
+[in]	E
+          E is DOUBLE PRECISION array, dimension (N-1)
+          The (n-1) off-diagonal elements of the tridiagonal matrix T.
+[out]	M
+          M is INTEGER
+          The actual number of eigenvalues found. 0 <= M <= N.
+          (See also the description of INFO=2,3.)
+[out]	NSPLIT
+          NSPLIT is INTEGER
+          The number of diagonal blocks in the matrix T.
+          1 <= NSPLIT <= N.
+[out]	W
+          W is DOUBLE PRECISION array, dimension (N)
+          On exit, the first M elements of W will contain the
+          eigenvalues.  (DSTEBZ may use the remaining N-M elements as
+          workspace.)
+[out]	IBLOCK
+          IBLOCK is INTEGER array, dimension (N)
+          At each row/column j where E(j) is zero or small, the
+          matrix T is considered to split into a block diagonal
+          matrix.  On exit, if INFO = 0, IBLOCK(i) specifies to which
+          block (from 1 to the number of blocks) the eigenvalue W(i)
+          belongs.  (DSTEBZ may use the remaining N-M elements as
+          workspace.)
+[out]	ISPLIT
+          ISPLIT is INTEGER array, dimension (N)
+          The splitting points, at which T breaks up into submatrices.
+          The first submatrix consists of rows/columns 1 to ISPLIT(1),
+          the second of rows/columns ISPLIT(1)+1 through ISPLIT(2),
+          etc., and the NSPLIT-th consists of rows/columns
+          ISPLIT(NSPLIT-1)+1 through ISPLIT(NSPLIT)=N.
+          (Only the first NSPLIT elements will actually be used, but
+          since the user cannot know a priori what value NSPLIT will
+          have, N words must be reserved for ISPLIT.)
+[out]	WORK
+          WORK is DOUBLE PRECISION array, dimension (4*N)
+[out]	IWORK
+          IWORK is INTEGER array, dimension (3*N)
+[out]	INFO
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -i, the i-th argument had an illegal value
+          > 0:  some or all of the eigenvalues failed to converge or
+                were not computed:
+                =1 or 3: Bisection failed to converge for some
+                        eigenvalues; these eigenvalues are flagged by a
+                        negative block number.  The effect is that the
+                        eigenvalues may not be as accurate as the
+                        absolute and relative tolerances.  This is
+                        generally caused by unexpectedly inaccurate
+                        arithmetic.
+                =2 or 3: RANGE='I' only: Not all of the eigenvalues
+                        IL:IU were found.
+                        Effect: M < IU+1-IL
+                        Cause:  non-monotonic arithmetic, causing the
+                                Sturm sequence to be non-monotonic.
+                        Cure:   recalculate, using RANGE='A', and pick
+                                out eigenvalues IL:IU.  In some cases,
+                                increasing the PARAMETER "FUDGE" may
+                                make things work.
+                = 4:    RANGE='I', and the Gershgorin interval
+                        initially used was too small.  No eigenvalues
+                        were computed.
+                        Probable cause: your machine has sloppy
+                                        floating-point arithmetic.
+                        Cure: Increase the PARAMETER "FUDGE",
+                              recompile, and try again.
+Internal Parameters:
+  RELFAC  DOUBLE PRECISION, default = 2.0e0
+          The relative tolerance.  An interval (a,b] lies within
+          "relative tolerance" if  b-a < RELFAC*ulp*max(|a|,|b|),
+          where "ulp" is the machine precision (distance from 1 to
+          the next larger floating point number.)
+
+  FUDGE   DOUBLE PRECISION, default = 2
+          A "fudge factor" to widen the Gershgorin intervals.  Ideally,
+          a value of 1 should work, but on machines with sloppy
+          arithmetic, this needs to be larger.  The default for
+          publicly released versions should be large enough to handle
+          the worst machine around.  Note that this has no effect
+          on accuracy of the solution.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+
+ */
 #endif /* SCC_TriDiagRoutines__ */
 
 

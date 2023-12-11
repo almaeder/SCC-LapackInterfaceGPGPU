@@ -22,8 +22,8 @@
 //
 // Internally the matrix data is stored as a SCC::LapackMatrixCmplx16 
 // instance that contains the matrix data stored using the Lapack band 
-// storage convention, so that LAPACK band matrix routines can be
-// invoked without having to transform the matrix data. 
+// storage convention so that LAPACK band matrix routines can be
+// invoked directly without having to transform the matrix data.
 //
 // Typical use case consists of initializing an instance
 // then setting values of the banded matrix using the
@@ -436,8 +436,6 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     bool sizeCheck(long, long) const{return true;}
 #endif
 
-
-
     SCC::LapackMatrixCmplx16 cmplxMdata;
 
 	long ku;
@@ -447,9 +445,14 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
 
 } // Namespace SCC
 
+//
 // LAPACK documentation
+//
+////////////////////////////////////////////////////////////////
+// ZGBMV
+////////////////////////////////////////////////////////////////
 /*
-ubroutine zgbmv	(	character 	trans,
+subroutine zgbmv	(	character 	trans,
 integer 	m,
 integer 	n,
 integer 	kl,
@@ -463,7 +466,6 @@ complex*16 	beta,
 complex*16, dimension(*) 	y,
 integer 	incy
 )
-ZGBMV
 
 Purpose:
  ZGBMV  performs one of the matrix-vector operations

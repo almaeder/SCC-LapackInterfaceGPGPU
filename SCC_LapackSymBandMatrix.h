@@ -5,7 +5,8 @@
  *      Author: anderson
  */
 
-// A class for representing a dense matrix in Lapack symmetric band storage.
+// A class for representing a dense matrix in Lapack symmetric band storage
+// (beta version).
 //
 // This routine packs the upper triangular portion of the symmetric band matrix
 // data so that only indices j >= i with j < i + ku are allowed where ku is
