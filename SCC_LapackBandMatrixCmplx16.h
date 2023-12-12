@@ -172,6 +172,33 @@ class LapackBandMatrixCmplx16
     	return std::sqrt(valSum);
     }
 
+
+/*!  Outputs the band matrix as a dense matrix with the (0,0) element in the upper left corner */
+
+void printDense(std::ostream& outStream, int precision = 3)
+{
+	    std::complex<double> val;
+
+        for(long i = 0;  i < N; i++)
+        {
+        for(long j = 0; j <  N; j++)
+        {
+          if((j > i + ku)||(j < i - kl))
+          {val =  {0.0,0.0};}
+          else
+          {val = this->operator()(i,j); }
+          outStream <<   std::scientific << std::setprecision(precision) <<  std::showpos << std::right << std::setw(precision+18) << val << " ";
+        }
+        outStream << std::endl;
+        }
+
+}
+
+//
+// ToDo: Decide on proper output format to support both << and >> stream operators
+//       and then implements.
+//
+/*
 	friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrixCmplx16&  V)
 	{
         long i; long j; std::complex<double> val;
@@ -190,6 +217,7 @@ class LapackBandMatrixCmplx16
         }
         return outStream;
 	}
+*/
 
 
 	//  Algebraic operators

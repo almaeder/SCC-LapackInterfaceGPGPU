@@ -330,9 +330,32 @@ class LapackBandMatrix
     }
 
 
+/*!  Outputs the band matrix as a dense matrix with the (0,0) element in the upper left corner */
 
-/*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
+void printDense(std::ostream& outStream, int precision = 3)
+{
+	    double val;
 
+        for(long i = 0;  i < N; i++)
+        {
+        for(long j = 0; j <  N; j++)
+        {
+          if((j > i + ku)||(j < i - kl))
+          {val = 0.0;}
+          else
+          {val = this->operator()(i,j); }
+          outStream <<   std::scientific << std::setprecision(precision) <<  std::right << std::setw(precision+7) << val << " ";
+        }
+        outStream << std::endl;
+        }
+
+}
+
+/*
+//
+// ToDo: Decide on proper output format to support both << and >> stream operators
+//       and then implements.
+//
 friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&  V)
 {
         long i; long j; double val;
@@ -351,7 +374,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
         }
         return outStream;
 }
-
+*/
 
 
 // Fortran indexing bounds check max(1,j-ku) <= i <= min(N,j+kl)

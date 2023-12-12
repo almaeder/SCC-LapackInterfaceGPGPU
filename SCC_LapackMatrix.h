@@ -650,8 +650,22 @@ LapackMatrix getColSlice(long colStartIndex, long colEndIndex)
 	return M;
 }
 
+/*!  Outputs the matrix with limited number of digits with the (0,0) element in the upper left corner */
 
+void printDense(std::ostream& outStream, int precision = 3)
+{
+	    double val;
 
+        for(long i = 0;  i < rows; i++)
+        {
+        for(long j = 0; j <  cols; j++)
+        {
+          val = this->operator()(i,j);
+          outStream <<   std::scientific << std::setprecision(precision) <<  std::showpos << std::right << std::setw(precision+7) << val << " ";
+        }
+        outStream << std::endl;
+        }
+}
 
 /*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
 
@@ -663,7 +677,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
         {
         for(j = 0; j <  V.cols; j++)
         {
-          outStream <<   std::scientific << std::setprecision(3) <<  std::right << std::setw(10) << V(i,j) << " ";
+          outStream <<   std::scientific << std::setprecision(15) << std::showpos <<  std::right << V(i,j) << " ";
         }
         outStream << std::endl;
         }
