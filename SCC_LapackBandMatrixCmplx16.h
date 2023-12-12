@@ -178,6 +178,8 @@ class LapackBandMatrixCmplx16
 void printDense(std::ostream& outStream, int precision = 3)
 {
 	    std::complex<double> val;
+	    std::ios_base::fmtflags ff = outStream.flags();
+	    int precisionCache = outStream.precision(precision);
 
         for(long i = 0;  i < N; i++)
         {
@@ -192,6 +194,8 @@ void printDense(std::ostream& outStream, int precision = 3)
         outStream << std::endl;
         }
 
+        outStream.flags(ff);
+        outStream.precision(precisionCache);
 }
 
 //

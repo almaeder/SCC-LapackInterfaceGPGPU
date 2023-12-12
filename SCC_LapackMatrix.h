@@ -655,22 +655,27 @@ LapackMatrix getColSlice(long colStartIndex, long colEndIndex)
 void printDense(std::ostream& outStream, int precision = 3)
 {
 	    double val;
+	    std::ios_base::fmtflags ff = outStream.flags();
+	    int precisionCache = outStream.precision(precision);
 
         for(long i = 0;  i < rows; i++)
         {
         for(long j = 0; j <  cols; j++)
         {
           val = this->operator()(i,j);
-          outStream <<   std::scientific << std::setprecision(precision) <<  std::showpos << std::right << std::setw(precision+7) << val << " ";
+          outStream <<   std::scientific <<  std::showpos << std::right << std::setw(precision+7) << val << " ";
         }
         outStream << std::endl;
         }
+        outStream.flags(ff);
+        outStream.precision(precisionCache);
 }
 
 /*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
 
 friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
 {
+	    std::ios_base::fmtflags ff = outStream.flags();
         long i; long j;
 
         for(i = 0;  i < V.rows; i++)
@@ -681,6 +686,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
         }
         outStream << std::endl;
         }
+        outStream.flags(ff);
         return outStream;
 }
 

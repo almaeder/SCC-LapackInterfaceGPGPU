@@ -180,6 +180,8 @@ public:
 
 	void printDense(std::ostream& outStream, int precision = 3)
 	{
+	    std::ios_base::fmtflags ff = outStream.flags();
+	    int precisionCache = outStream.precision(precision);
 	    std::complex<double> val;
 
         for(long i = 0;  i < rows; i++)
@@ -187,10 +189,12 @@ public:
         for(long j = 0; j <  cols; j++)
         {
           val = this->operator()(i,j);
-          outStream <<   std::scientific << std::setprecision(precision) <<  std::showpos << std::right << std::setw(precision+18) << val << " ";
+          outStream <<   std::scientific <<  std::showpos << std::right << std::setw(precision+18) << val << " ";
         }
         outStream << std::endl;
         }
+        outStream.flags(ff);
+        outStream.precision(precisionCache);
 	}
 
 	/*!  Outputs the matrix values to the screen with the (0,0) element in the upper left corner  */
@@ -198,6 +202,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrixCmplx16&  V)
 	{
         long i; long j;
+
+        std::ios_base::fmtflags ff = outStream.flags();
 
         for(i = 0;  i < V.rows; i++)
         {
@@ -207,6 +213,8 @@ public:
         }
         outStream << std::endl;
         }
+
+        outStream.flags(ff);
         return outStream;
 	}
 
