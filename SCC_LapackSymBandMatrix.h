@@ -131,18 +131,17 @@ class LapackSymBandMatrix
     }
 
 
-    void applySymmetricBandMatrix(SCC::LapackSymBandMatrix& A,
-    std::vector<double>& x, std::vector<double>& y)
+    void applySymmetricBandMatrix(std::vector<double>& x, std::vector<double>& y)
     {
-	long N = A.getDimension();
+	long N = getDimension();
 
 	if((long)y.size() != N)  {y.resize(N,0.0);}
 
 	char UPLO    = 'U';
-    long K       = A.getSuperDiagonalCount();
+    long K       = ku;
     double ALPHA = 1.0;
     double BETA  = 0.0;
-    double*Aptr  = A.getDataPointer();
+    double*Aptr  = Sp.dataPtr;
     double*Xptr  = &x[0];
     double*Yptr  = &y[0];
     long LDA     = K+1;
