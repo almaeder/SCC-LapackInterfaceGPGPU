@@ -138,6 +138,12 @@ extern "C" void dsyev_(char* JOBZ,char* UPLO, long*N, double* Aptr, long* LDA, d
 extern "C"  void zhpevx_(char*JOBZ, char* RANGE, char* UPLO,long* N, double* AP, double* VL, double* VU,
                         long*   IL, long*   IU, double*   ABSTOL, long*   M, double* W, double* Z, long* LDZ,
              			double* WORK, double* RWORK, long* IWORK, long* IFAIL, long* INFO);
+
+// complex general
+extern "C"  void zgeevx_(char* balanc, char* jobvl, char* jobvr, char* sense, long* n,
+double* A, long* 	LDA, double*  w, double*  vl, long*   ldvl, double*  vr, long* ldvr,
+long* ilo, long* ihi, double* scale, double* abnrm, double* rconde, double* rcondv,
+double*	work, long*	lwork, double* rwork, long* info);
              			
 // double symmetric tri-diagonal
 extern "C" int dsteqr_(char *compz, long *n, double *d, double *e, double *z,

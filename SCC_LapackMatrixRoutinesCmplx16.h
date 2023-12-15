@@ -41,15 +41,23 @@
 //
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Class  ZHPEVX : Created for computing eigensystem components
-//                 of a complex matrix..
+//                 of a Hermitian complex matrix.
+//
 // LAPACK base routine description:
 // ZHPEVX computes selected eigenvalues and, optionally, eigenvectors
 // of a complex Hermitian matrix A in packed storage.
 // Eigenvalues/vectors can be selected by specifying either a range of
 // values or a range of indices for the desired eigenvalues.
 //
-
-
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class  ZGEEVX : Created for computing eigensystem components
+//                 of a complex matrix.
+//
+// LAPACK base routine description:
+// ZGEEVX computes for an N-by-N complex nonsymmetric matrix A, the
+// eigenvalues and, optionally, the left and/or right eigenvectors.
+//
+//
 #include "SCC_LapackHeaders.h"
 #include "SCC_LapackMatrix.h"
 #include "SCC_LapackMatrixCmplx16.h"
@@ -487,6 +495,110 @@ public :
     std::vector<double>        RWORK;
     std::vector<long>          IWORK;
     std::vector<long>          IFAIL;
+};
+
+
+
+
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Class  ZGEEVX  : Created for computing eigensystem components
+//                 of a complex matrix..
+// LAPACK base routine description:
+// ZGEEVX computes for an N-by-N complex general matrix A, the
+// eigenvalues and, optionally, the left and/or right eigenvectors.
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+class ZGEEVX 
+{
+public :
+
+	ZGEEVX (){}
+
+	void initialize()
+	{
+	AS.initialize();
+    WORK.clear();
+    RWORK.clear();
+    SCALE.clear();
+    RCONDE.clear();
+    RCONDV.clear();
+	}
+
+	
+    // Computes the eigenvalues and left and right eigenvectors.
+
+	void createEigensystem(SCC::LapackMatrixCmplx16& A,
+	std::vector<std::complex<double>>& eigValues,
+	SCC::LapackMatrixCmplx16& eigVecLeft,
+	SCC::LapackMatrixCmplx16& eigVecRight)
+	{
+    if(A.getRowDimension() != A.getColDimension())
+	{
+			throw std::runtime_error("\nZHPEVX : Non-square matrix input argument  \n");
+	}
+
+	AS.initialize(A); // Copy input matrix since scaling and permuting
+
+	char BALANC = 'B';  // Both diagonally scale and permute the copy of A.
+    char JOBVL  = 'V'; 	// Compute left eigenvectors
+    char JOBVR  = 'V'; 	// Compute right eigenvectors
+    char SENSE  = 'B';  // Compute left and right eigenvector reciprocal condition numbers
+    long N      = A.getRowDimension();
+    long LDA    = N;
+
+    eigValues.resize(N,{0.0,0.0});
+    double* eigValuePtr = reinterpret_cast<double*>(const_cast< std::complex<double>* >(&eigValues[0]));
+
+    eigVecLeft.initialize(N,N);
+    eigVecRight.initialize(N,N);
+
+    double* VLptr = eigVecLeft.mData.getDataPointer();
+    long LDVL     = N;
+
+    double* VRptr = eigVecRight.mData.getDataPointer();
+    long LDVR     = N;
+
+    long ILO      = 0;
+    long IHI      = 0;
+
+    SCALE.resize(N,0.0);
+
+    double ABNRM;
+
+    RCONDE.resize(N,0.0);
+    RCONDV.resize(N,0.0);
+
+    RWORK.resize(2*N,0.0);
+    long INFO = 0;
+
+    long LWORK = N*N + 3*N;
+    WORK.resize(2*LWORK); // 2 X LWORK since need complex*16
+
+
+    zgeevx_(&BALANC,&JOBVL, &JOBVR, &SENSE,&N,AS.mData.getDataPointer(), &LDA,
+        eigValuePtr, VLptr, &LDVL, VRptr,&LDVR, &ILO, &IHI, &SCALE[0], &ABNRM,
+        &RCONDE[0], &RCONDV[0], &WORK[0],&LWORK, &RWORK[0], &INFO);
+
+    if(INFO != 0)
+    {
+    	std::stringstream sout;
+    	sout << "\nZGEEVX \nError INFO = " << INFO << "\n";
+    	throw std::runtime_error(sout.str());
+    }
+
+	}
+
+
+
+
+	SCC::LapackMatrixCmplx16      AS; // Copy of input matrix (S for scaled)
+
+    std::vector<double> WORK;
+    std::vector<double> RWORK;
+    std::vector<double> SCALE;
+    std::vector<double> RCONDE;
+    std::vector<double> RCONDV;
 };
 
 
@@ -946,6 +1058,200 @@ Parameters
           < 0:  if INFO = -i, the i-th argument had an illegal value
           > 0:  if INFO = i, then i eigenvectors failed to converge.
                 Their indices are stored in array IFAIL.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+*/
+/*
+
+ZGEEVX computes the eigenvalues and, optionally, the left and/or right eigenvectors for GE complex matrices
+
+zgeevx()
+subroutine zgeevx	(	character 	balanc,
+character 	jobvl,
+character 	jobvr,
+character 	sense,
+integer 	n,
+complex*16, dimension( lda, * ) 	a,
+integer 	lda,
+complex*16, dimension( * ) 	w,
+complex*16, dimension( ldvl, * ) 	vl,
+integer 	ldvl,
+complex*16, dimension( ldvr, * ) 	vr,
+integer 	ldvr,
+integer 	ilo,
+integer 	ihi,
+double precision, dimension( * ) 	scale,
+double precision 	abnrm,
+double precision, dimension( * ) 	rconde,
+double precision, dimension( * ) 	rcondv,
+complex*16, dimension( * ) 	work,
+integer 	lwork,
+double precision, dimension( * ) 	rwork,
+integer 	info 
+)		
+ 
+Purpose:
+ ZGEEVX computes for an N-by-N complex nonsymmetric matrix A, the
+ eigenvalues and, optionally, the left and/or right eigenvectors.
+
+ Optionally also, it computes a balancing transformation to improve
+ the conditioning of the eigenvalues and eigenvectors (ILO, IHI,
+ SCALE, and ABNRM), reciprocal condition numbers for the eigenvalues
+ (RCONDE), and reciprocal condition numbers for the right
+ eigenvectors (RCONDV).
+
+ The right eigenvector v(j) of A satisfies
+                  A * v(j) = lambda(j) * v(j)
+ where lambda(j) is its eigenvalue.
+ The left eigenvector u(j) of A satisfies
+               u(j)**H * A = lambda(j) * u(j)**H
+ where u(j)**H denotes the conjugate transpose of u(j).
+
+ The computed eigenvectors are normalized to have Euclidean norm
+ equal to 1 and largest component real.
+
+ Balancing a matrix means permuting the rows and columns to make it
+ more nearly upper triangular, and applying a diagonal similarity
+ transformation D * A * D**(-1), where D is a diagonal matrix, to
+ make its rows and columns closer in norm and the condition numbers
+ of its eigenvalues and eigenvectors smaller.  The computed
+ reciprocal condition numbers correspond to the balanced matrix.
+ Permuting rows and columns will not change the condition numbers
+ (in exact arithmetic) but diagonal scaling will.  For further
+ explanation of balancing, see section 4.10.2 of the LAPACK
+ Users' Guide.
+Parameters
+[in]	BALANC	
+          BALANC is CHARACTER*1
+          Indicates how the input matrix should be diagonally scaled
+          and/or permuted to improve the conditioning of its
+          eigenvalues.
+          = 'N': Do not diagonally scale or permute;
+          = 'P': Perform permutations to make the matrix more nearly
+                 upper triangular. Do not diagonally scale;
+          = 'S': Diagonally scale the matrix, ie. replace A by
+                 D*A*D**(-1), where D is a diagonal matrix chosen
+                 to make the rows and columns of A more equal in
+                 norm. Do not permute;
+          = 'B': Both diagonally scale and permute A.
+
+          Computed reciprocal condition numbers will be for the matrix
+          after balancing and/or permuting. Permuting does not change
+          condition numbers (in exact arithmetic), but balancing does.
+[in]	JOBVL	
+          JOBVL is CHARACTER*1
+          = 'N': left eigenvectors of A are not computed;
+          = 'V': left eigenvectors of A are computed.
+          If SENSE = 'E' or 'B', JOBVL must = 'V'.
+[in]	JOBVR	
+          JOBVR is CHARACTER*1
+          = 'N': right eigenvectors of A are not computed;
+          = 'V': right eigenvectors of A are computed.
+          If SENSE = 'E' or 'B', JOBVR must = 'V'.
+[in]	SENSE	
+          SENSE is CHARACTER*1
+          Determines which reciprocal condition numbers are computed.
+          = 'N': None are computed;
+          = 'E': Computed for eigenvalues only;
+          = 'V': Computed for right eigenvectors only;
+          = 'B': Computed for eigenvalues and right eigenvectors.
+
+          If SENSE = 'E' or 'B', both left and right eigenvectors
+          must also be computed (JOBVL = 'V' and JOBVR = 'V').
+[in]	N	
+          N is INTEGER
+          The order of the matrix A. N >= 0.
+[in,out]	A	
+          A is COMPLEX*16 array, dimension (LDA,N)
+          On entry, the N-by-N matrix A.
+          On exit, A has been overwritten.  If JOBVL = 'V' or
+          JOBVR = 'V', A contains the Schur form of the balanced
+          version of the matrix A.
+[in]	LDA	
+          LDA is INTEGER
+          The leading dimension of the array A.  LDA >= max(1,N).
+[out]	W	
+          W is COMPLEX*16 array, dimension (N)
+          W contains the computed eigenvalues.
+[out]	VL	
+          VL is COMPLEX*16 array, dimension (LDVL,N)
+          If JOBVL = 'V', the left eigenvectors u(j) are stored one
+          after another in the columns of VL, in the same order
+          as their eigenvalues.
+          If JOBVL = 'N', VL is not referenced.
+          u(j) = VL(:,j), the j-th column of VL.
+[in]	LDVL	
+          LDVL is INTEGER
+          The leading dimension of the array VL.  LDVL >= 1; if
+          JOBVL = 'V', LDVL >= N.
+[out]	VR	
+          VR is COMPLEX*16 array, dimension (LDVR,N)
+          If JOBVR = 'V', the right eigenvectors v(j) are stored one
+          after another in the columns of VR, in the same order
+          as their eigenvalues.
+          If JOBVR = 'N', VR is not referenced.
+          v(j) = VR(:,j), the j-th column of VR.
+[in]	LDVR	
+          LDVR is INTEGER
+          The leading dimension of the array VR.  LDVR >= 1; if
+          JOBVR = 'V', LDVR >= N.
+[out]	ILO	
+          ILO is INTEGER
+[out]	IHI	
+          IHI is INTEGER
+          ILO and IHI are integer values determined when A was
+          balanced.  The balanced A(i,j) = 0 if I > J and
+          J = 1,...,ILO-1 or I = IHI+1,...,N.
+[out]	SCALE	
+          SCALE is DOUBLE PRECISION array, dimension (N)
+          Details of the permutations and scaling factors applied
+          when balancing A.  If P(j) is the index of the row and column
+          interchanged with row and column j, and D(j) is the scaling
+          factor applied to row and column j, then
+          SCALE(J) = P(J),    for J = 1,...,ILO-1
+                   = D(J),    for J = ILO,...,IHI
+                   = P(J)     for J = IHI+1,...,N.
+          The order in which the interchanges are made is N to IHI+1,
+          then 1 to ILO-1.
+[out]	ABNRM	
+          ABNRM is DOUBLE PRECISION
+          The one-norm of the balanced matrix (the maximum
+          of the sum of absolute values of elements of any column).
+[out]	RCONDE	
+          RCONDE is DOUBLE PRECISION array, dimension (N)
+          RCONDE(j) is the reciprocal condition number of the j-th
+          eigenvalue.
+[out]	RCONDV	
+          RCONDV is DOUBLE PRECISION array, dimension (N)
+          RCONDV(j) is the reciprocal condition number of the j-th
+          right eigenvector.
+[out]	WORK	
+          WORK is COMPLEX*16 array, dimension (MAX(1,LWORK))
+          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+[in]	LWORK	
+          LWORK is INTEGER
+          The dimension of the array WORK.  If SENSE = 'N' or 'E',
+          LWORK >= max(1,2*N), and if SENSE = 'V' or 'B',
+          LWORK >= N*N+2*N.
+          For good performance, LWORK must generally be larger.
+
+          If LWORK = -1, then a workspace query is assumed; the routine
+          only calculates the optimal size of the WORK array, returns
+          this value as the first entry of the WORK array, and no error
+          message related to LWORK is issued by XERBLA.
+[out]	RWORK	
+          RWORK is DOUBLE PRECISION array, dimension (2*N)
+[out]	INFO	
+          INFO is INTEGER
+          = 0:  successful exit
+          < 0:  if INFO = -i, the i-th argument had an illegal value.
+          > 0:  if INFO = i, the QR algorithm failed to compute all the
+                eigenvalues, and no eigenvectors or condition numbers
+                have been computed; elements 1:ILO-1 and i+1:N of W
+                contain eigenvalues which have converged.
 Author
 Univ. of Tennessee
 Univ. of California Berkeley
