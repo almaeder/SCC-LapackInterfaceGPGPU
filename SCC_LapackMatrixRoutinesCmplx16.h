@@ -640,11 +640,18 @@ public :
 // arguments to the zgeesx function call.
 //
 
+//
+// Selection based on eigenvalues with positive 
+// (including 0) real part. 
+//
 extern "C" int eigSelectRealPos(double* C)
 {
-    if(C[0] > 0.0) {return true;} return false;
+    if(C[0] >= 0.0) {return true;} return false;
 }
 
+//
+// Selection based on eigenvalues negative real part
+//
 extern "C" int eigSelectRealNeg(double* C)
 {
     if(C[0] < 0.0) {return true;} return false;
