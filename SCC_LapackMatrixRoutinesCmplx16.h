@@ -57,7 +57,16 @@
 // ZGEEVX computes for an N-by-N complex nonsymmetric matrix A, the
 // eigenvalues and, optionally, the left and/or right eigenvectors.
 //
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Class   ZGEESX: Created for computing Schur decomposition of a general
+//                 complex matrix.
+// LAPACK base routine description:
+// ZGEESX computes for an N-by-N complex nonsymmetric matrix A, the
+// eigenvalues, the Schur form T, and, optionally, the matrix of Schur
+// vectors Z.
 //
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #include "SCC_LapackHeaders.h"
 #include "SCC_LapackMatrix.h"
 #include "SCC_LapackMatrixCmplx16.h"
@@ -70,6 +79,7 @@
 
 namespace SCC
 {
+
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 // Class  ZGESVX : Created for solving A*X = B using LU factorization
@@ -599,6 +609,189 @@ public :
     std::vector<double> SCALE;
     std::vector<double> RCONDE;
     std::vector<double> RCONDV;
+};
+
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// Class   ZGEESX: Created for computing Schur decomposition of a general
+//                 complex matrix.
+// LAPACK base routine description:
+// ZGEESX computes for an N-by-N complex nonsymmetric matrix A, the
+// eigenvalues, the Schur form T, and, optionally, the matrix of Schur
+// vectors Z.  This gives the Schur factorization A = Z*T*(Z**H).
+
+// Optionally, it also orders the eigenvalues on the diagonal of the
+// Schur form so that selected eigenvalues are at the top left;
+// computes a reciprocal condition number for the average of the
+// selected eigenvalues (RCONDE); and computes a reciprocal condition
+// number for the right invariant subspace corresponding to the
+// selected eigenvalues (RCONDV).  The leading columns of Z form an
+// orthonormal basis for this invariant subspace.
+//
+// Note: Using ints for LOGICAL arguments instead of C++ bool. Since
+// values are passed by pointer, this will support LOGICAL values
+// used by Fortran declared LOGICAL(1) through LOGICAL(4).
+//
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+//
+// Required functions for ZGEESX that are
+// declared external in Fortran and passed in as
+// arguments to the zgeesx function call.
+//
+
+extern "C" int eigSelectRealPos(double* C)
+{
+    if(C[0] > 0.0) {return true;} return false;
+}
+
+extern "C" int eigSelectRealNeg(double* C)
+{
+    if(C[0] < 0.0) {return true;} return false;
+}
+
+
+class ZGEESX
+{
+
+public:
+
+enum {NONE, SORT_POS, SORT_NEG};
+
+//
+// The input matrix is not altered, on output Q contains the Schur
+// vectors and T the upper triangular decomposition of A with
+// eigenvalues on the diagonal.
+//
+// Use sortType = SORT_POS to select eigenvalues with positive real
+//                part to be located in upper left quadrant of
+//                decomposition.
+//
+// Use sortType = SORT_NEG to select eigenvalues with negative real
+//                part to be located in upper left quadrant of
+//                decomposition.
+//
+// The first sortedDim columns of Q form an invariant subspace
+// associated with the eigenvalues selected by sortType.
+//
+//
+void computeSchurDecomposition(const SCC::LapackMatrixCmplx16& A,
+SCC::LapackMatrixCmplx16& Q, SCC::LapackMatrixCmplx16& T,
+std::vector<std::complex<double>>& eigValues,
+long& sortedDim, int sortType = ZGEESX::NONE)
+{
+    long N        =  A.rows;
+
+    char JOBVS    = 'V'; // Compute Schur vectors
+
+    char SORTFLAG = 'S'; // Sort eigenvalues
+
+    if(sortType == ZGEESX::NONE){SORTFLAG = 'N';}
+
+    char SENSE    = 'B';
+    if(sortType == ZGEESX::NONE)
+    {
+    SENSE     = 'N';
+    RCONDE    = 0.0; // Infinite condition numbers if no sorting
+    RCONDV    = 0.0; // Infinite condition numbers if no sorting
+    sortedDim = 0;
+    }
+
+    long NSIZE    =  N;
+
+    //
+    // Copy in put A to T, zgeesx will overwrite T with
+    // the upper triangular component of the decomposition
+    //
+
+    T.initialize(A);
+    double*Aptr  = T.mData.getDataPointer();
+
+    long LDA     = N;
+
+    SCC::LapackMatrixCmplx16 cEigVals(N,1);
+
+    Q.initialize(N,N);
+
+    long LDVS = N;
+
+    long LWORK = (N*(N+1))/2;
+    std::vector<double> cWORK(2*LWORK,0.0);
+    std::vector<double> RWORK(N,0.0);
+
+    std::vector<int> BWORK(N,0); // Using int's for logical, possibly over-allocating memory
+                                 // but certainly sufficient.
+
+    long INFO = 0;
+
+    if(sortType == ZGEESX::SORT_POS)
+    {
+    zgeesx_(&JOBVS,&SORTFLAG,eigSelectRealPos,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
+           cEigVals.mData.getDataPointer(),Q.mData.getDataPointer(),&LDVS,
+           &RCONDE,&RCONDV,&cWORK[0],&LWORK,&RWORK[0],&BWORK[0],&INFO);
+    }
+    else if(sortType == ZGEESX::SORT_NEG)
+    {
+    zgeesx_(&JOBVS,&SORTFLAG,eigSelectRealNeg,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
+           cEigVals.mData.getDataPointer(),Q.mData.getDataPointer(),&LDVS,
+           &RCONDE,&RCONDV,&cWORK[0],&LWORK,&RWORK[0],&BWORK[0],&INFO);
+    }
+    else
+    {
+    	zgeesx_(&JOBVS,&SORTFLAG,eigSelectRealPos,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
+        cEigVals.mData.getDataPointer(),Q.mData.getDataPointer(),&LDVS,
+        &RCONDE,&RCONDV,&cWORK[0],&LWORK,&RWORK[0],&BWORK[0],&INFO);
+    }
+
+    eigValues.resize(N);
+    for(long k = 0; k < N; k++)
+    {
+    eigValues[k] = cEigVals(k);
+    }
+
+
+    if(INFO != 0)
+    {
+    	std::stringstream sout;
+    	sout << "\nZGEESX \nError INFO = " << INFO << "\n";
+    	throw std::runtime_error(sout.str());
+    }
+}
+
+// A utility for creating a matrix whose columns are those of the
+// invariant subspace vectors associated with those eigenvalues
+// obtained by the sorting type. The input matrix Q, and the value
+// of sortedDim are those obtained from an invocation of
+// computeSchurDecomposition.
+//
+//
+void createInvariantSubpace(long sortedDim, const SCC::LapackMatrixCmplx16& Q, SCC::LapackMatrixCmplx16& V)
+{
+	long rows = Q.rows;
+	long cols = sortedDim;
+
+    if(sortedDim == 0)
+    {
+    V.initialize();
+    return;
+    }
+
+	V.initialize(rows,cols);
+	for(long j = 0; j < cols; j++)
+	{
+	for(long i = 0; i < rows; i++)
+	{
+	V(i,j) = Q(i,j);
+	}}
+
+}
+
+//
+//  public class variables to allow access to LAPACK return arguments
+//
+    double RCONDE;
+    double RCONDV;
+
 };
 
 
@@ -1258,5 +1451,160 @@ Univ. of California Berkeley
 Univ. of Colorado Denver
 NAG Ltd.
 */
+
+/////////////////////////////////////////////////////////////////////////////
+// ZGEESX
+/////////////////////////////////////////////////////////////////////////////
+/*
+ZGEESX computes the eigenvalues, the Schur form, and, optionally, the matrix of Schur vectors general complex matrices
+
+subroutine zgeesx	(	character 	jobvs,
+character 	sort,
+external 	select,
+character 	sense,
+integer 	n,
+complex*16, dimension( lda, * ) 	a,
+integer 	lda,
+integer 	sdim,
+complex*16, dimension( * ) 	w,
+complex*16, dimension( ldvs, * ) 	vs,
+integer 	ldvs,
+double precision 	rconde,
+double precision 	rcondv,
+complex*16, dimension( * ) 	work,
+integer 	lwork,
+double precision, dimension( * ) 	rwork,
+logical, dimension( * ) 	bwork,
+integer 	info
+)
+
+ ZGEESX computes for an N-by-N complex nonsymmetric matrix A, the
+ eigenvalues, the Schur form T, and, optionally, the matrix of Schur
+ vectors Z.  This gives the Schur factorization A = Z*T*(Z**H).
+
+ Optionally, it also orders the eigenvalues on the diagonal of the
+ Schur form so that selected eigenvalues are at the top left;
+ computes a reciprocal condition number for the average of the
+ selected eigenvalues (RCONDE); and computes a reciprocal condition
+ number for the right invariant subspace corresponding to the
+ selected eigenvalues (RCONDV).  The leading columns of Z form an
+ orthonormal basis for this invariant subspace.
+
+ For further explanation of the reciprocal condition numbers RCONDE
+ and RCONDV, see Section 4.10 of the LAPACK Users' Guide (where
+ these quantities are called s and sep respectively).
+
+ A complex matrix is in Schur form if it is upper triangular.
+Parameters
+[in]	JOBVS
+          JOBVS is CHARACTER*1
+          = 'N': Schur vectors are not computed;
+          = 'V': Schur vectors are computed.
+[in]	SORT
+          SORT is CHARACTER*1
+          Specifies whether or not to order the eigenvalues on the
+          diagonal of the Schur form.
+          = 'N': Eigenvalues are not ordered;
+          = 'S': Eigenvalues are ordered (see SELECT).
+[in]	SELECT
+          SELECT is a LOGICAL FUNCTION of one COMPLEX*16 argument
+          SELECT must be declared EXTERNAL in the calling subroutine.
+          If SORT = 'S', SELECT is used to select eigenvalues to order
+          to the top left of the Schur form.
+          If SORT = 'N', SELECT is not referenced.
+          An eigenvalue W(j) is selected if SELECT(W(j)) is true.
+[in]	SENSE
+          SENSE is CHARACTER*1
+          Determines which reciprocal condition numbers are computed.
+          = 'N': None are computed;
+          = 'E': Computed for average of selected eigenvalues only;
+          = 'V': Computed for selected right invariant subspace only;
+          = 'B': Computed for both.
+          If SENSE = 'E', 'V' or 'B', SORT must equal 'S'.
+[in]	N
+          N is INTEGER
+          The order of the matrix A. N >= 0.
+[in,out]	A
+          A is COMPLEX*16 array, dimension (LDA, N)
+          On entry, the N-by-N matrix A.
+          On exit, A is overwritten by its Schur form T.
+[in]	LDA
+          LDA is INTEGER
+          The leading dimension of the array A.  LDA >= max(1,N).
+[out]	SDIM
+          SDIM is INTEGER
+          If SORT = 'N', SDIM = 0.
+          If SORT = 'S', SDIM = number of eigenvalues for which
+                         SELECT is true.
+[out]	W
+          W is COMPLEX*16 array, dimension (N)
+          W contains the computed eigenvalues, in the same order
+          that they appear on the diagonal of the output Schur form T.
+[out]	VS
+          VS is COMPLEX*16 array, dimension (LDVS,N)
+          If JOBVS = 'V', VS contains the unitary matrix Z of Schur
+          vectors.
+          If JOBVS = 'N', VS is not referenced.
+[in]	LDVS
+          LDVS is INTEGER
+          The leading dimension of the array VS.  LDVS >= 1, and if
+          JOBVS = 'V', LDVS >= N.
+[out]	RCONDE
+          RCONDE is DOUBLE PRECISION
+          If SENSE = 'E' or 'B', RCONDE contains the reciprocal
+          condition number for the average of the selected eigenvalues.
+          Not referenced if SENSE = 'N' or 'V'.
+[out]	RCONDV
+          RCONDV is DOUBLE PRECISION
+          If SENSE = 'V' or 'B', RCONDV contains the reciprocal
+          condition number for the selected right invariant subspace.
+          Not referenced if SENSE = 'N' or 'E'.
+[out]	WORK
+          WORK is COMPLEX*16 array, dimension (MAX(1,LWORK))
+          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+[in]	LWORK
+          LWORK is INTEGER
+          The dimension of the array WORK.  LWORK >= max(1,2*N).
+          Also, if SENSE = 'E' or 'V' or 'B', LWORK >= 2*SDIM*(N-SDIM),
+          where SDIM is the number of selected eigenvalues computed by
+          this routine.  Note that 2*SDIM*(N-SDIM) <= N*N/2. Note also
+          that an error is only returned if LWORK < max(1,2*N), but if
+          SENSE = 'E' or 'V' or 'B' this may not be large enough.
+          For good performance, LWORK must generally be larger.
+
+          If LWORK = -1, then a workspace query is assumed; the routine
+          only calculates upper bound on the optimal size of the
+          array WORK, returns this value as the first entry of the WORK
+          array, and no error message related to LWORK is issued by
+          XERBLA.
+[out]	RWORK
+          RWORK is DOUBLE PRECISION array, dimension (N)
+[out]	BWORK
+          BWORK is LOGICAL array, dimension (N)
+          Not referenced if SORT = 'N'.
+[out]	INFO
+          INFO is INTEGER
+          = 0: successful exit
+          < 0: if INFO = -i, the i-th argument had an illegal value.
+          > 0: if INFO = i, and i is
+             <= N: the QR algorithm failed to compute all the
+                   eigenvalues; elements 1:ILO-1 and i+1:N of W
+                   contain those eigenvalues which have converged; if
+                   JOBVS = 'V', VS contains the transformation which
+                   reduces A to its partially converged Schur form.
+             = N+1: the eigenvalues could not be reordered because some
+                   eigenvalues were too close to separate (the problem
+                   is very ill-conditioned);
+             = N+2: after reordering, roundoff changed values of some
+                   complex eigenvalues so that leading eigenvalues in
+                   the Schur form no longer satisfy SELECT=.TRUE.  This
+                   could also be caused by underflow due to scaling.
+Author
+Univ. of Tennessee
+Univ. of California Berkeley
+Univ. of Colorado Denver
+NAG Ltd.
+*/
+
 #endif
 

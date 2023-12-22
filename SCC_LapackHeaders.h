@@ -144,6 +144,13 @@ extern "C"  void zgeevx_(char* balanc, char* jobvl, char* jobvr, char* sense, lo
 double* A, long* 	LDA, double*  w, double*  vl, long*   ldvl, double*  vr, long* ldvr,
 long* ilo, long* ihi, double* scale, double* abnrm, double* rconde, double* rcondv,
 double*	work, long*	lwork, double* rwork, long* info);
+
+// complex general Schur decomposition
+
+extern "C" void zgeesx_(char* jobvs, char* 	sort,  int(*eigSelect)(double* C), char* sense,
+long*	n, double* a, long* 	lda, long* 	sdim, double* w, double* vs, long*	ldvs,
+double* rconde, double* rcondv, double* work, long* lwork, double* rwork, int*  bwork, long* info);
+
              			
 // double symmetric tri-diagonal
 extern "C" int dsteqr_(char *compz, long *n, double *d, double *e, double *z,
