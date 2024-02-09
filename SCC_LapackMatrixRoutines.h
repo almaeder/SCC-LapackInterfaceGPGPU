@@ -805,7 +805,18 @@ class DGESVX
 public:
 
     DGESVX()
-    {}
+    {
+    initialize();
+    }
+
+    void initialize()
+    {
+    RCOND = 0;
+    FERR.clear();
+    BERR.clear();
+    A.initialize();
+    AF.initialize();
+    }
 
 
     void applyInverse(const LapackMatrix& A,std::vector <double >& b)
@@ -849,7 +860,7 @@ public:
         double* Cptr  =  &C[0];
 
         std::vector<double>   B(N*NRHS);
-        double* Bptr  =      &B[0];
+        double* Bptr  =       &B[0];
         long LDB      =          N;
 
 
@@ -944,7 +955,7 @@ public:
 
 
 
-    double         RCOND;
+    double              RCOND;
     std::vector<double>  FERR;
     std::vector<double>  BERR;
 
@@ -967,8 +978,9 @@ class DPOSV
 public:
 
     DPOSV()
-    {}
+    {initialize();}
 
+    void initialize(){}
 
     void applyInverse(const LapackMatrix& A,std::vector <double >& b)
     {
@@ -1026,7 +1038,24 @@ class NORMALEQ
 {
 public:
 
-    NORMALEQ(){};
+    NORMALEQ()
+    {
+    initialize();
+    };
+
+    void initialize()
+    {
+    bStar.clear();
+    bBar.clear();
+    ABnormal.initialize();
+
+    diagonalizer.initialize();
+    eigenValues.clear();
+    eigenVectors.initialize();
+
+    singularValues.clear();
+    svdDim = 0;
+    }
 
     long getSVDdim(){return svdDim;}
 
@@ -1190,16 +1219,16 @@ public:
 
     }
 
-    std::vector<double>          bStar;
-    std::vector<double>           bBar;
+    std::vector<double>      bStar;
+    std::vector<double>       bBar;
     LapackMatrix          ABnormal;
 
-    DSYEV             diagonalizer;
+    DSYEV                 diagonalizer;
     std::vector<double>    eigenValues;
-    LapackMatrix      eigenVectors;
+    LapackMatrix          eigenVectors;
 
     std::vector<double> singularValues;
-        long               svdDim;
+        long                    svdDim;
 
 };
 
