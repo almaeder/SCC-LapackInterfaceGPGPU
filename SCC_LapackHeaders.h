@@ -37,6 +37,20 @@
 #ifndef SCC_LAPACK_HEADERS_
 #define SCC_LAPACK_HEADERS_
 
+extern "C" {
+    // Declaration of the dgeqrf function from LAPACK
+    void dgeqrf_(long* m, long* n, double* A, long* lda, double* tau, double* work, long* lwork, long* info);    
+    // dorgqr: Generate an orthogonal matrix Q from QR factorization
+    void dorgqr_(long* m, long* n, long* k, double* A, long* lda, double* tau, double* work, long* lwork, long* info);
+    
+    // zgeqrf: Compute the QR factorization of a complex matrix (single precision)
+    void zgeqrf_(long* m, long* n, std::complex<double>* A, long* lda, std::complex<double>* tau, std::complex<double>* work, long* lwork, long* info);
+
+    // zungqr: Generate an orthogonal matrix Q from QR factorization for complex matrix (single precision)
+    void zungqr_(long* m, long* n, long* k, std::complex<double>* A, long* lda, std::complex<double>* tau, std::complex<double>* work, long* lwork, long* info);
+}
+
+
 extern "C" double dlamch_(char* CMACH);
 
 // Matrix-Vector
