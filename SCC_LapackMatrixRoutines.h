@@ -23,7 +23,7 @@
 // Fortran routines
 //
 // C++  int    ==  Fortran LOGICAL
-// C++  long   ==  Fortran INTEGER
+// C++  RC_INT   ==  Fortran INTEGER
 // C++  double ==  Fortran DOUBLE PRECISION
 //
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -181,7 +181,7 @@ public:
     this->overwriteExtDataFlag = dgelsy.overwriteExtDataFlag;
     }
 
-    long getRank()
+    RC_INT getRank()
     {
     return RANK;
     }
@@ -205,8 +205,8 @@ public:
         }
 
 
-        long M  = this->A.getRowDimension();
-        long N  = this->A.getColDimension();
+        RC_INT M  = this->A.getRowDimension();
+        RC_INT N  = this->A.getColDimension();
 
         // Capture B and increase size if N > M
 
@@ -215,14 +215,14 @@ public:
 
         JPVT.resize(N);
 
-        long NRHS = 1;
-        long LDA  = M;
-        long LDB  = (long)X.size();
+        RC_INT NRHS = 1;
+        RC_INT LDA  = M;
+        RC_INT LDB  = (RC_INT)X.size();
 
 
        // Query to obtain optimal work array size
 
-        long LWORK = -1;
+        RC_INT LWORK = -1;
         INFO       =  0;
 
         double WORKtmp;
@@ -231,7 +231,7 @@ public:
         &JPVT[0], &RCOND, &RANK, &WORKtmp, &LWORK,&INFO);
 
 
-        LWORK = (long)(WORKtmp + 100);
+        LWORK = (RC_INT)(WORKtmp + 100);
         WORK.resize(LWORK);
 
 
@@ -261,7 +261,7 @@ public:
 
     std::vector<double> qrSolve(double* Bptr, const LapackMatrix& Ain, double rcondCutoff = -1.0)
     {
-        long M     = Ain.getRowDimension();
+        RC_INT M     = Ain.getRowDimension();
         std::vector<double>                 B(M);
         std::memcpy(B.data(),Bptr,M*sizeof(double));
         return qrSolve(B,Ain,rcondCutoff);
@@ -279,7 +279,7 @@ public:
 //  This routine is added to avoid the need for extraneous copying
 //  of input matrix data.
 //
-    std::vector<double> qrSolve(const std::vector<double>& B, long Arows, long Acols, double* Adata, double rcondCutoff = -1.0)
+    std::vector<double> qrSolve(const std::vector<double>& B, RC_INT Arows, RC_INT Acols, double* Adata, double rcondCutoff = -1.0)
     {
         this->overwriteExtDataFlag = true;
         this->A.initialize(Arows,Acols,Adata);
@@ -296,11 +296,11 @@ public:
 
     LapackMatrix           A;
     std::vector<double>    X;
-    std::vector<long>   JPVT;
+    std::vector<RC_INT>   JPVT;
     double             RCOND;
-    long                RANK;
+    RC_INT                RANK;
 
-    long                INFO;
+    RC_INT                INFO;
     std::vector<double> WORK;
 
     std::numeric_limits<double>   numLimits;
@@ -389,12 +389,12 @@ public:
             }
         }
 
-        long M  = this->A.getRowDimension();
-        long N  = this->A.getColDimension();
+        RC_INT M  = this->A.getRowDimension();
+        RC_INT N  = this->A.getColDimension();
 
         // S dimension (min(M,N))
 
-        long minMN = (M < N) ? M : N;
+        RC_INT minMN = (M < N) ? M : N;
 
         if((U.rows != M) || (U.cols != M)) {U.initialize(M,M);}
 
@@ -403,23 +403,23 @@ public:
         if((VT.rows != N) || (VT.cols != N)) {VT.initialize(N,N);}
 
 
-        long  LDA = M;
-        long  LDU = M;
-        long LDVT = N;
+        RC_INT  LDA = M;
+        RC_INT  LDU = M;
+        RC_INT LDVT = N;
 
         JOBU  = 'A';  //  All M columns of U are returned in array U:
         JOBVT = 'A';  //  All N rows of V**T are returned in the array VT;
 
        // Query to obtain optimal work array size
 
-        long LWORK = -1;
+        RC_INT LWORK = -1;
         INFO       = 0;
 
         double WORKtmp;
         dgesvd_(&JOBU, &JOBVT, &M, &N, this->A.dataPtr, &LDA, &singularValues[0],
                 U.dataPtr, &LDU, VT.dataPtr, &LDVT, &WORKtmp, &LWORK, &INFO);
 
-        LWORK = (long)(WORKtmp + 100);
+        LWORK = (RC_INT)(WORKtmp + 100);
         WORK.resize(LWORK);
 
         double* WORKptr =    &WORK[0];
@@ -449,7 +449,7 @@ public:
 //  This routine is added to avoid the need for extraneous copying
 //  of input matrix data.
 //
-    void computeSVD(long Arows, long Acols, double* Adata)
+    void computeSVD(RC_INT Arows, RC_INT Acols, double* Adata)
     {
         this->overwriteExtDataFlag = true;
         this->A.initialize(Arows,Acols,Adata);
@@ -474,12 +474,12 @@ public:
         }
 
 
-        long M  = this->A.getRowDimension();
-        long N  = this->A.getColDimension();
+        RC_INT M  = this->A.getRowDimension();
+        RC_INT N  = this->A.getColDimension();
 
         // S dimension (min(M,N))
 
-        long minMN = (M < N) ? M : N;
+        RC_INT minMN = (M < N) ? M : N;
 
         if((U.rows != M) || (U.cols != minMN)) {U.initialize(M,minMN);}
 
@@ -488,23 +488,23 @@ public:
         if((VT.rows != minMN) || (VT.cols != N)) {VT.initialize(minMN,N);}
 
 
-        long  LDA = M;
-        long  LDU = M;
-        long LDVT = minMN;
+        RC_INT  LDA = M;
+        RC_INT  LDU = M;
+        RC_INT LDVT = minMN;
 
         JOBU  = 'S';  //  minMN columns of U are returned in array U:
         JOBVT = 'S';  //  minMN rows of V**T are returned in the array VT;
 
        // Query to obtain optimal work array size
 
-        long LWORK = -1;
+        RC_INT LWORK = -1;
         INFO       = 0;
 
         double WORKtmp;
         dgesvd_(&JOBU, &JOBVT, &M, &N, this->A.dataPtr, &LDA, &singularValues[0], U.dataPtr, &LDU, VT.dataPtr, &LDVT,
                &WORKtmp, &LWORK, &INFO);
 
-        LWORK = (long)(WORKtmp + 100);
+        LWORK = (RC_INT)(WORKtmp + 100);
         WORK.resize(LWORK);
 
         double* WORKptr =    &WORK[0];
@@ -535,7 +535,7 @@ public:
 //  This routine is added to avoid the need for extraneous copying
 //  of input matrix data.
 //
-    void computeThinSVD(long Arows, long Acols, double* Adata)
+    void computeThinSVD(RC_INT Arows, RC_INT Acols, double* Adata)
     {
         this->overwriteExtDataFlag = true;
         this->A.initialize(Arows,Acols,Adata);
@@ -543,7 +543,7 @@ public:
         this->overwriteExtDataFlag = false;
     }
 
-    long getSVDdim(){return svdDim;}
+    RC_INT getSVDdim(){return svdDim;}
 
     std::vector<double> applyPseudoInverse(std::vector<double>& b, double svdCutoff = -1.0)
     {
@@ -552,10 +552,10 @@ public:
 
         svdDim = 0;
 
-        if(svdCutoff < 0){svdDim = (long)singularValues.size();}
+        if(svdCutoff < 0){svdDim = (RC_INT)singularValues.size();}
         else
         {
-        for(long i = 0; i < (long)singularValues.size(); i++)
+        for(RC_INT i = 0; i < (RC_INT)singularValues.size(); i++)
         {
             if(singularValues[i] > svdCutoff){svdDim++;}
         }
@@ -575,19 +575,19 @@ public:
         */
 
         char TRANS     = 'T';
-        long Mstar     = U.rows;
-        long Nstar     = svdDim;
+        RC_INT Mstar     = U.rows;
+        RC_INT Nstar     = svdDim;
         double ALPHA   = 1.0;
         double BETA    = 0.0;
-        long LDA       = Mstar;
-        long INCX      = 1;
-        long INCY      = 1;
+        RC_INT LDA       = Mstar;
+        RC_INT INCX      = 1;
+        RC_INT INCY      = 1;
 
         xStar.resize(svdDim,0.0);
 
-        dgemv_(&TRANS,&Mstar,&Nstar,&ALPHA,U.dataPtr,&LDA,&b[0],&INCX,&BETA,&xStar[0],&INCY);
+        dgemv(&TRANS,&Mstar,&Nstar,&ALPHA,U.dataPtr,&LDA,&b[0],&INCX,&BETA,&xStar[0],&INCY);
 
-        for(long i = 0; i < svdDim; i++)
+        for(RC_INT i = 0; i < svdDim; i++)
         {
             xStar[i] /= singularValues[i];
         }
@@ -609,14 +609,14 @@ public:
         LDA       = Mstar;
         INCX      = 1;
         INCY      = 1;
-        dgemv_(&TRANS,&Mstar,&Nstar,&ALPHA,VT.dataPtr,&LDA,&xStar[0],&INCX,&BETA,&x[0],&INCY);
+        dgemv(&TRANS,&Mstar,&Nstar,&ALPHA,VT.dataPtr,&LDA,&xStar[0],&INCX,&BETA,&x[0],&INCY);
         }
         else // Extract columns of Vstar as first svdDim rows of VT
         {
         Vstar.initialize(VT.cols,svdDim);
-        for(long i = 0; i < VT.cols; i++)
+        for(RC_INT i = 0; i < VT.cols; i++)
         {
-        for(long j = 0; j < svdDim;  j++)
+        for(RC_INT j = 0; j < svdDim;  j++)
         {
         Vstar(i,j) = VT(j,i);
         }}
@@ -629,7 +629,7 @@ public:
         LDA       = Mstar;
         INCX      = 1;
         INCY      = 1;
-        dgemv_(&TRANS,&Mstar,&Nstar,&ALPHA,Vstar.dataPtr,&LDA,&xStar[0],&INCX,&BETA,&x[0],&INCX);
+        dgemv(&TRANS,&Mstar,&Nstar,&ALPHA,Vstar.dataPtr,&LDA,&xStar[0],&INCX,&BETA,&x[0],&INCX);
         }
 
         return x;
@@ -644,10 +644,10 @@ public:
 
     char                 JOBU;
     char                JOBVT;
-    long                 INFO;
+    RC_INT                 INFO;
     std::vector<double>  WORK;
 
-    long               svdDim;
+    RC_INT               svdDim;
     bool overwriteExtDataFlag;
 };
 
@@ -683,25 +683,25 @@ public:
         JOBZ = 'N';
         UPLO = 'U';            // Using upper triangular part of A
 
-        long N       = A.rows;
+        RC_INT N       = A.rows;
         double* Uptr = U.dataPtr;
 
-        long LDA = N;
+        RC_INT LDA = N;
 
         eigenValues.resize(N);
         double*Wptr = &eigenValues[0];
 
-        long LWORK = -1;
+        RC_INT LWORK = -1;
 
         double WORKtmp;
 
-        long INFO = 0;
+        RC_INT INFO = 0;
 
         // First call to get optimal workspace
 
         dsyev_(&JOBZ,&UPLO,&N, Uptr, &LDA, Wptr, &WORKtmp, &LWORK, &INFO);
 
-        LWORK = (long)(WORKtmp + 100);
+        LWORK = (RC_INT)(WORKtmp + 100);
         std::vector<double>    WORK(LWORK);
         double* WORKptr =    &WORK[0];
 
@@ -729,9 +729,9 @@ public:
         eigenVectors.clear();
         eigenVectors.resize(A.cols,eigVector);
 
-        for(long j = 0; j < A.cols; j++)
+        for(RC_INT j = 0; j < A.cols; j++)
         {
-            for(long i = 0; i < A.rows; i++)
+            for(RC_INT i = 0; i < A.rows; i++)
             {
                 eigenVectors[j][i] = U(i,j);
             }
@@ -748,25 +748,25 @@ public:
         JOBZ = 'V';
         UPLO = 'U';            // Using upper triangular part of A
 
-        long N       = A.rows;
+        RC_INT N       = A.rows;
         double* Uptr = eigenVectors.dataPtr;
 
-        long LDA = N;
+        RC_INT LDA = N;
 
         eigenValues.resize(N);
         double*Wptr = &eigenValues[0];
 
-        long LWORK = -1;
+        RC_INT LWORK = -1;
 
         double WORKtmp;
 
-        long INFO = 0;
+        RC_INT INFO = 0;
 
         // First call to get optimal workspace
 
         dsyev_(&JOBZ,&UPLO,&N, Uptr, &LDA, Wptr, &WORKtmp, &LWORK, &INFO);
 
-        LWORK = (long)(WORKtmp + 100);
+        LWORK = (RC_INT)(WORKtmp + 100);
         std::vector<double>    WORK(LWORK);
         double* WORKptr =    &WORK[0];
 
@@ -829,13 +829,13 @@ public:
             applyInverse(A,b.dataPtr,b.cols);
     }
 
-    void applyInverse(const LapackMatrix& A, double* b, long NRHS = 1)
+    void applyInverse(const LapackMatrix& A, double* b, RC_INT NRHS = 1)
     {
         assert(A.sizeCheck(A.rows,A.cols));
 
         char FACT  = 'E'; // Equilibrate, then factor
         char TRANS = 'N'; // No transpose
-        long N     = A.rows;
+        RC_INT N     = A.rows;
 
         // Allocate temporaries
 
@@ -845,11 +845,11 @@ public:
         double* Aptr  =  A.dataPtr;
         double* AFptr = AF.dataPtr;
 
-        long LDA   = N;
-        long LDAF  = N;
+        RC_INT LDA   = N;
+        RC_INT LDAF  = N;
 
-        std::vector <long >   IPIV(N);
-        long* IPIVptr = &IPIV[0];
+        std::vector <RC_INT >   IPIV(N);
+        RC_INT* IPIVptr = &IPIV[0];
 
         char  EQED;
 
@@ -861,14 +861,14 @@ public:
 
         std::vector<double>   B(N*NRHS);
         double* Bptr  =       &B[0];
-        long LDB      =          N;
+        RC_INT LDB      =          N;
 
 
         // b will be overwritten with the solution
         // so no need to declare X separately
 
         double* Xptr = b;
-        long LDX     = N;
+        RC_INT LDX     = N;
 
         FERR.resize(NRHS);
         BERR.resize(NRHS);
@@ -876,15 +876,15 @@ public:
         std::vector<double>   WORK(4*N);
         double* WORKptr = &WORK[0];
 
-        std::vector<long>       IWORK(N);
-        long* IWORKptr  = &IWORK[0];
+        std::vector<RC_INT>       IWORK(N);
+        RC_INT* IWORKptr  = &IWORK[0];
 
-        long   INFO = 0;
+        RC_INT   INFO = 0;
 
 
         // Assign right hand side to B
 
-        for(long i = 0; i < N*NRHS; i++)
+        for(RC_INT i = 0; i < N*NRHS; i++)
         {
             Bptr[i] = b[i];
         }
@@ -992,19 +992,19 @@ public:
             applyInverse(A,b.dataPtr,b.cols);
     }
 
-    void applyInverse(const LapackMatrix& A, double* b, long NRHS = 1)
+    void applyInverse(const LapackMatrix& A, double* b, RC_INT NRHS = 1)
     {
         assert(A.sizeCheck(A.rows,A.cols));
 
         char UPLO  = 'U'; // A = U**T* U
-        long N     = A.rows;
+        RC_INT N     = A.rows;
 
         double* Aptr  =  A.dataPtr;
 
-        long LDA    = N;
+        RC_INT LDA    = N;
         double* Bptr = b;
-        long LDB    = N;
-        long   INFO = 0;
+        RC_INT LDB    = N;
+        RC_INT   INFO = 0;
 
         dposv_(&UPLO, &N, &NRHS,Aptr,&LDA,Bptr,&LDB,&INFO);
 
@@ -1057,7 +1057,7 @@ public:
     svdDim = 0;
     }
 
-    long getSVDdim(){return svdDim;}
+    RC_INT getSVDdim(){return svdDim;}
 
 
     // Normal equation solution of
@@ -1079,8 +1079,8 @@ public:
 
         // Form normal equations
 
-        long M = AB.getRowDimension();
-        long N = AB.getColDimension();
+        RC_INT M = AB.getRowDimension();
+        RC_INT N = AB.getColDimension();
 
         std::vector<double> x(N,0.0);
 
@@ -1091,18 +1091,18 @@ public:
 
         char TRANSA  = 'T';
         char TRANSB  = 'N';
-        long  Mstar  = N;
-        long  Nstar  = N;
-        long Kstar   = M;
+        RC_INT  Mstar  = N;
+        RC_INT  Nstar  = N;
+        RC_INT Kstar   = M;
         double ALPHA = 1.0;
         double BETA  = 0.0;
-        long LDA     = M;
-        long LDB     = M;
-        long LDC     = N;
-        long INCX    = 1;
-        long INCY    = 1;
+        RC_INT LDA     = M;
+        RC_INT LDB     = M;
+        RC_INT LDC     = N;
+        RC_INT INCX    = 1;
+        RC_INT INCY    = 1;
 
-        dgemm_(&TRANSA,&TRANSB,&Mstar,&Nstar,&Kstar,&ALPHA, AB.dataPtr,&LDA,AB.dataPtr, &LDB,&BETA,ABnormal.dataPtr,&LDC);
+        dgemm(&TRANSA,&TRANSB,&Mstar,&Nstar,&Kstar,&ALPHA, AB.dataPtr,&LDA,AB.dataPtr, &LDB,&BETA,ABnormal.dataPtr,&LDC);
 
         // Diagonalize the normal equations
 
@@ -1125,13 +1125,13 @@ public:
         // are returned smallest to largest, so pack the singular values in reverse order
         // to agree with the SVD convention
 
-        long      stopIndex = 0;
+        RC_INT      stopIndex = 0;
         if(M < N) stopIndex = N-M;
 
-        long svIndex             = 0;
-        long firstComponentIndex = N-1;
-        long componentCount      = 0;
-        for(long i= N-1; i >= stopIndex; i--)
+        RC_INT svIndex             = 0;
+        RC_INT firstComponentIndex = N-1;
+        RC_INT componentCount      = 0;
+        for(RC_INT i= N-1; i >= stopIndex; i--)
         {
             singularValues[svIndex] = std::sqrt(std::abs(eigenValues[i]));
             if(singularValues[svIndex] > svdCutoff)
@@ -1144,7 +1144,7 @@ public:
 
         /*
         std::cout << std::setprecision(15) << std::endl;
-        for(long i = 0; i < eigenValues.size(); i++)
+        for(RC_INT i = 0; i < eigenValues.size(); i++)
         {
             std::cout << std::sqrt(std::abs(eigenValues[i])) <<  " " << std::abs(eigenValues[i]) << std::endl;
         }
@@ -1175,18 +1175,18 @@ public:
         double* bPtr   = &bStar[firstComponentIndex];
         double* eigPtr = eigenVectors.dataPtr + firstComponentIndex*N;
 
-        dgemv_(&TRANS,&Mstar,&Nstar,&ALPHA,eigPtr,&LDA,&bBar[0],&INCX,&BETA,bPtr,&INCY);
+        dgemv(&TRANS,&Mstar,&Nstar,&ALPHA,eigPtr,&LDA,&bBar[0],&INCX,&BETA,bPtr,&INCY);
 
         // Solve he diagonal system for the components being kept
 
-        for(long i= N-1; i >= firstComponentIndex; i--)
+        for(RC_INT i= N-1; i >= firstComponentIndex; i--)
         {
             bStar[i] /= std::abs(eigenValues[i]);
         }
 
         // Zero out entries in case M < N
 
-        for(long i = firstComponentIndex-1; i >= 0; i--)
+        for(RC_INT i = firstComponentIndex-1; i >= 0; i--)
         {
             bStar[i] = 0;
         }
@@ -1211,7 +1211,7 @@ public:
         bPtr   = &bStar[firstComponentIndex];
         eigPtr = eigenVectors.dataPtr + firstComponentIndex*N;
 
-        dgemv_(&TRANS,&Mstar,&Nstar,&ALPHA,eigPtr,&LDA,bPtr,&INCX,&BETA,&x[0],&INCY);
+        dgemv(&TRANS,&Mstar,&Nstar,&ALPHA,eigPtr,&LDA,bPtr,&INCX,&BETA,&x[0],&INCY);
 
         svdDim = componentCount;
 
@@ -1228,7 +1228,7 @@ public:
     LapackMatrix          eigenVectors;
 
     std::vector<double> singularValues;
-        long                    svdDim;
+        RC_INT                    svdDim;
 
 };
 
@@ -1292,7 +1292,7 @@ class QRutility
 
     std::vector<double> createQRsolution(std::vector<double>& b)
     {
-    try {if(QRfactors.getRowDimension() != (long)b.size()) {throw std::runtime_error("createQRsolution");}}
+    try {if(QRfactors.getRowDimension() != (RC_INT)b.size()) {throw std::runtime_error("createQRsolution");}}
     catch (std::runtime_error& e)
     {
      std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
@@ -1306,15 +1306,15 @@ class QRutility
 
     char SIDE    = 'L';
     char TRANS   = 'T';
-    long M       = (long)b.size();
-    long NRHS    = 1;
-    long K       = QRfactors.getColDimension();
-    long LDA     = QRfactors.getRowDimension();
+    RC_INT M       = (RC_INT)b.size();
+    RC_INT NRHS    = 1;
+    RC_INT K       = QRfactors.getColDimension();
+    RC_INT LDA     = QRfactors.getRowDimension();
     double* Aptr = QRfactors.getDataPointer();
-    long LDC     = M;
+    RC_INT LDC     = M;
 
-    long LWORK  = -1;
-    long INFO   =  0;
+    RC_INT LWORK  = -1;
+    RC_INT INFO   =  0;
 
     double WORKDIM;
 
@@ -1326,7 +1326,7 @@ class QRutility
     dormqr_(&SIDE, &TRANS, &M, &NRHS, &K,Aptr,& LDA, &TAU[0], &bTemp[0],
     &LDC, &WORKDIM, &LWORK, &INFO);
 
-    dormqrWorkSize = (long)WORKDIM+1;
+    dormqrWorkSize = (RC_INT)WORKDIM+1;
     }
 
     LWORK = dormqrWorkSize;
@@ -1351,10 +1351,10 @@ class QRutility
     TRANS        = 'N';
     char DIAG    = 'N';
     M            = QRfactors.getColDimension();
-    long N       = M;
+    RC_INT N       = M;
     NRHS         = 1;
     LDA          = QRfactors.getRowDimension();
-    long LDB     = M;
+    RC_INT LDB     = M;
 
     dtrtrs_(&UPLO, &TRANS, &DIAG, &N, &NRHS, Aptr, &LDA,&bTemp[0],&LDB,&INFO);
 
@@ -1372,7 +1372,7 @@ class QRutility
 
     LapackMatrix createQRsolution(const LapackMatrix& B)
     {
-    try {if(QRfactors.getRowDimension() != (long)B.rows) {throw std::runtime_error("createQRsolution");}}
+    try {if(QRfactors.getRowDimension() != (RC_INT)B.rows) {throw std::runtime_error("createQRsolution");}}
     catch (std::runtime_error& e)
     {
      std::cerr << "Runtime exception in QRutility member function " <<  e.what() << std::endl;
@@ -1388,15 +1388,15 @@ class QRutility
 
     char SIDE    = 'L';
     char TRANS   = 'T';
-    long M       = Btmp.rows;
-    long NRHS    = Btmp.cols;
-    long K       = QRfactors.getColDimension();
-    long LDA     = QRfactors.getRowDimension();
+    RC_INT M       = Btmp.rows;
+    RC_INT NRHS    = Btmp.cols;
+    RC_INT K       = QRfactors.getColDimension();
+    RC_INT LDA     = QRfactors.getRowDimension();
     double* Aptr = QRfactors.getDataPointer();
-    long LDC     = M;
+    RC_INT LDC     = M;
 
-    long LWORK  = -1;
-    long INFO   =  0;
+    RC_INT LWORK  = -1;
+    RC_INT INFO   =  0;
 
     double WORKDIM;
 
@@ -1408,7 +1408,7 @@ class QRutility
     dormqr_(&SIDE, &TRANS, &M, &NRHS, &K,Aptr,& LDA, &TAU[0], Btmp.getDataPointer(),
     &LDC, &WORKDIM, &LWORK, &INFO);
 
-    dormqrWorkSize = (long)WORKDIM+1;
+    dormqrWorkSize = (RC_INT)WORKDIM+1;
     }
 
     LWORK = dormqrWorkSize;
@@ -1433,10 +1433,10 @@ class QRutility
     TRANS        = 'N';
     char DIAG    = 'N';
     M            = QRfactors.getColDimension();
-    long N       = M;
+    RC_INT N       = M;
     NRHS         = Btmp.cols;
     LDA          = QRfactors.getRowDimension();
-    long LDB     = Btmp.rows;
+    RC_INT LDB     = Btmp.rows;
 
 
     dtrtrs_(&UPLO, &TRANS, &DIAG, &N, &NRHS, Aptr, &LDA,Btmp.getDataPointer(),&LDB,&INFO);
@@ -1456,9 +1456,9 @@ class QRutility
 
     LapackMatrix Bstar(N,N);
 
-    for(long i = 0; i < N; i++)
+    for(RC_INT i = 0; i < N; i++)
     {
-    for(long j = 0; j < N; j++)
+    for(RC_INT j = 0; j < N; j++)
     {
     Bstar(i,j) = Btmp(i,j);
     }}
@@ -1475,7 +1475,7 @@ class QRutility
 
     std::vector<double> createQRsolution(double* Bptr)
     {
-        long M  = QRfactors.getRowDimension();
+        RC_INT M  = QRfactors.getRowDimension();
         std::vector<double>                   B(M);
         std::memcpy(B.data(),Bptr,M*sizeof(double));
         return createQRsolution(B);
@@ -1487,8 +1487,8 @@ class QRutility
 //
     void createQRfactors(const SCC::LapackMatrix& A)
     {
-    long M   = A.getRowDimension();
-    long N   = A.getColDimension();
+    RC_INT M   = A.getRowDimension();
+    RC_INT N   = A.getColDimension();
 
     try
     {
@@ -1508,12 +1508,12 @@ class QRutility
 
     // Create QR factors
 
-    long LDA = M;
+    RC_INT LDA = M;
 
     TAU.resize(N);
 
-    long LWORK  = -1;
-    long INFO   =  0;
+    RC_INT LWORK  = -1;
+    RC_INT INFO   =  0;
 
     double WORKDIM;
 
@@ -1521,7 +1521,7 @@ class QRutility
 
     dgeqrf_(&M, &N, A.getDataPointer(), &LDA, &TAU[0],&WORKDIM, &LWORK, &INFO);
 
-    LWORK = (long)WORKDIM+1;
+    LWORK = (RC_INT)WORKDIM+1;
     WORK.resize(LWORK);
 
     // Create QR factors
@@ -1548,7 +1548,7 @@ class QRutility
     std::vector<double>         WORK;
     std::vector<double>        bTemp;
 
-    long         dormqrWorkSize;
+    RC_INT         dormqrWorkSize;
 };
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -1580,7 +1580,7 @@ public :
     // Computes the eigCount algebraically smallest eigenvalues and eigenvectors.
     // The value returned is the number of eigenvalues found.
 
-    long createAlgSmallestEigensystem(long eigCount, SCC::LapackMatrix& M, std::vector<double>& eigValues,
+    RC_INT createAlgSmallestEigensystem(RC_INT eigCount, SCC::LapackMatrix& M, std::vector<double>& eigValues,
                                       SCC::LapackMatrix& eigVectors)
     {
     if(M.getRowDimension() != M.getColDimension())
@@ -1588,7 +1588,7 @@ public :
             throw std::runtime_error("\nDSYEVX : Non-square matrix input argument  \n");
     }
 
-    long N = M.getRowDimension();
+    RC_INT N = M.getRowDimension();
 
     if(eigCount > N)
     {
@@ -1605,27 +1605,27 @@ public :
     char RANGE  = 'I'; // Specify index range of eigenvalues to be found (A for all, V for interval)
     char UPLO   = 'U'; // Store complex Hermetian matrix in upper trianglar packed form
 
-    long LDA  = N;
+    RC_INT LDA  = N;
     double VL = 0;
     double VU = 0;
 
-    long IL = 1;        // Index of smallest eigenvalue returned
-    long IU = eigCount; // Index of largest  eigenvalue returned
+    RC_INT IL = 1;        // Index of smallest eigenvalue returned
+    RC_INT IU = eigCount; // Index of largest  eigenvalue returned
 
     char   DLAMCH_IN = 'S';
     double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
 
-    long eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
+    RC_INT eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
 
     eigValues.clear();         // W parameter in original call
     eigValues.resize(N,0.0);
 
-    long LDZ   = N;
-    long Mstar = (IU-IL) + 1;              // Maximal number of eigenvalues to be computed when using index specification
+    RC_INT LDZ   = N;
+    RC_INT Mstar = (IU-IL) + 1;              // Maximal number of eigenvalues to be computed when using index specification
 
     eigVectors.initialize(LDZ,Mstar);      // Matrix whose columns containing the eigenvectors (Z in original call)
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     WORK.clear();
     IWORK.clear();
@@ -1633,13 +1633,13 @@ public :
 
     // workspace query
 
-    long LWORK = -1;
+    RC_INT LWORK = -1;
     WORK.resize(1,0.0);
 
     dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
     eigVectors.getDataPointer(),&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
 
-    LWORK  = (long)WORK[0];
+    LWORK  = (RC_INT)WORK[0];
 
     WORK.resize(LWORK,0.0);
     IWORK.resize(5*N,0);
@@ -1665,7 +1665,7 @@ public :
     // Computes the eigCount algebraically smallest eigenvalues and eigenvectors.
     // The value returned is the number of eigenvalues found.
 
-    long createEigensystem(SCC::LapackMatrix& M, std::vector<double>& eigValues,
+    RC_INT createEigensystem(SCC::LapackMatrix& M, std::vector<double>& eigValues,
                            SCC::LapackMatrix& eigVectors)
     {
      if(M.getRowDimension() != M.getColDimension())
@@ -1673,7 +1673,7 @@ public :
             throw std::runtime_error("\nDSYEVX : Non-square matrix input argument  \n");
     }
 
-    long N = M.getRowDimension();
+    RC_INT N = M.getRowDimension();
 
     // Copy input matrix
 
@@ -1683,25 +1683,25 @@ public :
     char RANGE  = 'A'; // Specify index range of eigenvalues to be found (A for all, V for interval)
     char UPLO   = 'U'; // Store complex Hermetian matrix in upper trianglar packed form
 
-    long LDA  = N;
+    RC_INT LDA  = N;
     double VL = 0;
     double VU = 0;
 
-    long IL = 0; // Index of smallest eigenvalue returned
-    long IU = 0; // Index of largest  eigenvalue returned
+    RC_INT IL = 0; // Index of smallest eigenvalue returned
+    RC_INT IU = 0; // Index of largest  eigenvalue returned
 
     char   DLAMCH_IN = 'S';
     double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
 
-    long eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
+    RC_INT eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
 
     eigValues.clear();         // W parameter in original call
     eigValues.resize(N,0.0);
 
-    long LDZ     = N;
+    RC_INT LDZ     = N;
     eigVectors.initialize(LDZ,N);      // Matrix whose columns containing the eigenvectors (Z in original call)
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     WORK.clear();
     IWORK.clear();
@@ -1709,13 +1709,13 @@ public :
 
     // workspace query
 
-    long LWORK = -1;
+    RC_INT LWORK = -1;
     WORK.resize(1,0.0);
 
     dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,&eigComputed,eigValues.data(),
     eigVectors.getDataPointer(),&LDZ,WORK.data(),&LWORK,IWORK.data(),IFAIL.data(),&INFO);
 
-    LWORK  = (long)WORK[0];
+    LWORK  = (RC_INT)WORK[0];
 
     WORK.resize(LWORK,0.0);
     IWORK.resize(5*N,0);
@@ -1737,14 +1737,14 @@ public :
     return eigComputed;
     }
 
-    long createAlgSmallestEigenvalues(long eigCount, SCC::LapackMatrix& M, std::vector<double>& eigValues)
+    RC_INT createAlgSmallestEigenvalues(RC_INT eigCount, SCC::LapackMatrix& M, std::vector<double>& eigValues)
     {
         if(M.getRowDimension() != M.getColDimension())
     {
             throw std::runtime_error("\nDSYEVX : Non-square matrix input argument  \n");
     }
 
-    long N = M.getRowDimension();
+    RC_INT N = M.getRowDimension();
 
     if(eigCount > N)
     {
@@ -1761,25 +1761,25 @@ public :
     char RANGE  = 'I'; // Specify index range of eigenvalues to be found (A for all, V for interval)
     char UPLO   = 'U'; // Store complex Hermetian matrix in upper trianglar packed form
 
-    long LDA  = N;
+    RC_INT LDA  = N;
     double VL = 0;
     double VU = 0;
 
-    long IL = 1;        // Index of smallest eigenvalue returned
-    long IU = eigCount; // Index of largest  eigenvalue returned
+    RC_INT IL = 1;        // Index of smallest eigenvalue returned
+    RC_INT IU = eigCount; // Index of largest  eigenvalue returned
 
     char   DLAMCH_IN = 'S';
     double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
 
-    long eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
+    RC_INT eigComputed = 0;     //  M parameter in original call = number of eigenvalues output
 
     eigValues.clear();         // W parameter in original call
     eigValues.resize(N,0.0);
 
-    long LDZ     = 1;
+    RC_INT LDZ     = 1;
     double ZDATA = 0.0;
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     WORK.clear();
     IWORK.clear();
@@ -1787,14 +1787,14 @@ public :
 
     // workspace query
 
-    long LWORK = -1;
+    RC_INT LWORK = -1;
     WORK.resize(1,0.0);
 
     dsyevx_(&JOBZ, &RANGE, &UPLO,&N,A.getDataPointer(),&LDA, &VL,&VU,&IL,&IU,&ABSTOL,
     		&eigComputed,eigValues.data(), &ZDATA,&LDZ,WORK.data(),&LWORK,
 			IWORK.data(),IFAIL.data(),&INFO);
 
-    LWORK  = (long)WORK[0];
+    LWORK  = (RC_INT)WORK[0];
 
     WORK.resize(LWORK,0.0);
     IWORK.resize(5*N,0);
@@ -1819,8 +1819,8 @@ public :
 
     SCC::LapackMatrix             A;
     std::vector<double>         WORK;
-    std::vector<long>          IWORK;
-    std::vector<long>          IFAIL;
+    std::vector<RC_INT>          IWORK;
+    std::vector<RC_INT>          IFAIL;
 
 
 };

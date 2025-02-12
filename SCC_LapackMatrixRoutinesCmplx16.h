@@ -19,7 +19,7 @@
 // Fortran routines
 //
 // C++  int                 ==  Fortran LOGICAL
-// C++  long                ==  Fortran INTEGER
+// C++  RC_INT                ==  Fortran INTEGER
 // C++  double              ==  Fortran DOUBLE PRECISION
 // C++ std::complex<double> ==  Fortran COMPLEX*16
 //
@@ -115,7 +115,7 @@ public:
 
     void applyInverse(const LapackMatrixCmplx16& A,std::vector <std::complex<double>>& b)
 	{
-    	    assert(A.sizeCheck(A.cols,(long)b.size()));
+    	    assert(A.sizeCheck(A.cols,(RC_INT)b.size()));
 	        double* bptr =  &(reinterpret_cast<double(&)[2]>(b[0])[0]);
 			applyInverse(A,bptr);
 	}
@@ -126,11 +126,11 @@ public:
     		applyInverse(A,b.mData.dataPtr,b.cols);
 	}
 
-	void applyInverse(const LapackMatrixCmplx16& A, double* b, long NRHS = 1)
+	void applyInverse(const LapackMatrixCmplx16& A, double* b, RC_INT NRHS = 1)
 	{
 		char FACT  = 'E'; // Equilibrate, then factor
 		char TRANS = 'N'; // No transpose
-		long N     = A.rows;
+		RC_INT N     = A.rows;
 
 		//
 		// Duplicate input matrix (since this zgbsvx overwrites input matrix)
@@ -139,14 +139,14 @@ public:
 		this->A.initialize(A);
 		this->AF.initialize(N,N);
 
-		double* Aptr  =  A.mData.dataPtr;
-		double* AFptr = AF.mData.dataPtr;
+        std::complex<double> *Aptr  = reinterpret_cast<std::complex<double>*>(A.mData.getDataPointer());
+        std::complex<double> *AFptr  = reinterpret_cast<std::complex<double>*>(AF.mData.getDataPointer());
 
-		long LDA   = N;
-		long LDAF  = N;
+		RC_INT LDA   = N;
+		RC_INT LDAF  = N;
 
-		std::vector <long >   IPIV(N);
-		long* IPIVptr = &IPIV[0];
+		std::vector <RC_INT >   IPIV(N);
+		RC_INT* IPIVptr = &IPIV[0];
 
 		char  EQED;
 
@@ -157,38 +157,39 @@ public:
 		std::vector<double>    C(N);
 		double* Cptr  =  &C[0];
 
-		std::vector<double>   B(2*N*NRHS);
-		double* Bptr  =      &B[0];
-	    long LDB      =    N;
+		std::vector<double> B(2*N*NRHS);
+		std::complex<double>* Bptr = reinterpret_cast<std::complex<double>*>(&B[0]);
+        
+	    RC_INT LDB      =    N;
 
 
 		// b will be overwritten with the solution
 	    // so no need to declare X separately
 
-		double* Xptr = b;
-		long LDX     = N;
+		std::complex<double>* Xptr = reinterpret_cast<std::complex<double>*>(b);
+		RC_INT LDX     = N;
 
 		FERR.resize(NRHS);
 		BERR.resize(NRHS);
 
 		std::vector<double>   WORK(4*N);
-		double* WORKptr     = &WORK[0];
+		std::complex<double>* WORKptr     = reinterpret_cast<std::complex<double>*>(&WORK[0]);
 
 		std::vector<double>  RWORK(2*N);
 		double* RWORKptr   = &RWORK[0];
 
-		long   INFO = 0;
+		RC_INT   INFO = 0;
 
 
 		// Assign right hand side to B
 
-		for(long i = 0; i < 2*N*NRHS; i++)
+		for(RC_INT i = 0; i < 2*N*NRHS; i++)
 		{
 			Bptr[i] = b[i];
 		}
 
 
-		zgesvx_(&FACT, &TRANS, &N, &NRHS, Aptr, &LDA, AFptr, &LDAF, IPIVptr,
+		zgesvx(&FACT, &TRANS, &N, &NRHS, Aptr, &LDA, AFptr, &LDAF, IPIVptr,
 		        &EQED, Rptr, Cptr, Bptr,&LDB, Xptr, &LDX, &RCOND,
 				&FERR[0], &BERR[0], WORKptr,RWORKptr, &INFO);
 
@@ -292,7 +293,7 @@ public :
 	// Computes the eigCount algebraically smallest eigenvalues and eigenvectors.
 	// The value returned is the number of eigenvalues found.
 
-	long createAlgSmallestEigensystem(long eigCount, SCC::LapackMatrixCmplx16& A, std::vector<double>& eigValues,
+	RC_INT createAlgSmallestEigensystem(RC_INT eigCount, SCC::LapackMatrixCmplx16& A, std::vector<double>& eigValues,
 			                          SCC::LapackMatrixCmplx16& eigVectors)
 	{
     if(A.getRowDimension() != A.getColDimension())
@@ -300,7 +301,7 @@ public :
 			throw std::runtime_error("\nZHPEVX : Non-square matrix input argument  \n");
 	}
 
-    long N = A.getRowDimension();
+    RC_INT N = A.getRowDimension();
 
     if(eigCount > N)
     {
@@ -319,23 +320,23 @@ public :
     double VL = 0;
     double VU = 0;
 
-    long IL = 1;        // Index of smallest eigenvalue returned
-    long IU = eigCount; // Index of largest  eigenvalue returned
+    RC_INT IL = 1;        // Index of smallest eigenvalue returned
+    RC_INT IU = eigCount; // Index of largest  eigenvalue returned
 
     char   DLAMCH_IN = 'S';
     double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
 
-    long M = 0;                            // Number of eigenvalues output
+    RC_INT M = 0;                            // Number of eigenvalues output
 
     eigValues.clear();                     // W parameter in original call
     eigValues.resize(N,0.0);
 
-    long LDZ   = N;
-    long Mstar = (IU-IL) + 1;              // Maximal number of eigenvalues to be computed when using index specification
+    RC_INT LDZ   = N;
+    RC_INT Mstar = (IU-IL) + 1;              // Maximal number of eigenvalues to be computed when using index specification
 
     eigVectors.initialize(LDZ,Mstar);      // Matrix whose columns containing the eigenvectors (Z in original call)
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     WORK.initialize();
     RWORK.clear();
@@ -348,8 +349,12 @@ public :
     IFAIL.resize(N,0);
 
 
-    zhpevx_(&JOBZ, &RANGE, &UPLO,&N,AP.mData.getDataPointer(),&VL,&VU,&IL,&IU,&ABSTOL,&M,eigValues.data(),
-    eigVectors.mData.getDataPointer(),&LDZ,WORK.mData.getDataPointer(),RWORK.data(),IWORK.data(),IFAIL.data(),&INFO);
+    std::complex<double> *APptr  = reinterpret_cast<std::complex<double>*>(AP.mData.getDataPointer());
+    std::complex<double> *EigVecptr  = reinterpret_cast<std::complex<double>*>(eigVectors.mData.getDataPointer());
+    std::complex<double> *WORKptr    = reinterpret_cast<std::complex<double>*>(WORK.mData.getDataPointer());
+
+    zhpevx_(&JOBZ, &RANGE, &UPLO,&N,APptr,&VL,&VU,&IL,&IU,&ABSTOL,&M, eigValues.data(),
+        EigVecptr, &LDZ, WORKptr, RWORK.data(),IWORK.data(),IFAIL.data(),&INFO);
 
     if(INFO != 0)
     {
@@ -368,14 +373,14 @@ public :
     // Computes the eigCount algebraically smallest eigenvalues and eigenvectors.
 	// The value returned is the number of eigenvalues found.
 
-	long createEigensystem(SCC::LapackMatrixCmplx16& A, std::vector<double>& eigValues, SCC::LapackMatrixCmplx16& eigVectors)
+	RC_INT createEigensystem(SCC::LapackMatrixCmplx16& A, std::vector<double>& eigValues, SCC::LapackMatrixCmplx16& eigVectors)
 	{
     if(A.getRowDimension() != A.getColDimension())
 	{
 			throw std::runtime_error("\nZHPEVX : Non-square matrix input argument  \n");
 	}
 
-    long N = A.getRowDimension();
+    RC_INT N = A.getRowDimension();
 
     char JOBZ   = 'V'; // Specify N for eigenvalues only
     char RANGE  = 'A'; // Specify index range of eigenvalues to be find (A for all, V for interval)
@@ -386,23 +391,23 @@ public :
     double VL = 0;
     double VU = 0;
 
-    long IL = 1; // Index of smallest eigenvalue returned
-    long IU = N; // Index of largest  eigenvalue returned
+    RC_INT IL = 1; // Index of smallest eigenvalue returned
+    RC_INT IU = N; // Index of largest  eigenvalue returned
 
     char   DLAMCH_IN = 'S';
     double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
 
-    long M = 0;                            // Number of eigenvalues output
+    RC_INT M = 0;                            // Number of eigenvalues output
 
     eigValues.clear();                     // W parameter in original call
     eigValues.resize(N,0.0);
 
-    long LDZ   = N;
-    long Mstar = N;                       // Maximal number of eigenvalues to be computed when using index specification
+    RC_INT LDZ   = N;
+    RC_INT Mstar = N;                       // Maximal number of eigenvalues to be computed when using index specification
 
     eigVectors.initialize(LDZ,Mstar);      // Matrix whose columns containing the eigenvectors (Z in original call)
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     WORK.initialize();
     RWORK.clear();
@@ -414,9 +419,13 @@ public :
     IWORK.resize(5*N,0);
     IFAIL.resize(N,0);
 
+    std::complex<double> *APptr  = reinterpret_cast<std::complex<double>*>(AP.mData.getDataPointer());
+    std::complex<double> *EigVecptr  = reinterpret_cast<std::complex<double>*>(eigVectors.mData.getDataPointer());
+    std::complex<double> *WORKptr    = reinterpret_cast<std::complex<double>*>(WORK.mData.getDataPointer());
 
-    zhpevx_(&JOBZ, &RANGE, &UPLO,&N,AP.mData.getDataPointer(),&VL,&VU,&IL,&IU,&ABSTOL,&M,eigValues.data(),
-    eigVectors.mData.getDataPointer(),&LDZ,WORK.mData.getDataPointer(),RWORK.data(),IWORK.data(),IFAIL.data(),&INFO);
+
+    zhpevx_(&JOBZ, &RANGE, &UPLO,&N, APptr,&VL,&VU,&IL,&IU,&ABSTOL,&M,eigValues.data(),
+    EigVecptr, &LDZ, WORKptr,RWORK.data(),IWORK.data(),IFAIL.data(),&INFO);
 
     if(INFO != 0)
     {
@@ -431,14 +440,14 @@ public :
     return M;
 	}
 
-    long createAlgSmallestEigenvalues(long eigCount, SCC::LapackMatrixCmplx16& A, std::vector<double>& eigValues)
+    RC_INT createAlgSmallestEigenvalues(RC_INT eigCount, SCC::LapackMatrixCmplx16& A, std::vector<double>& eigValues)
 	{
     if(A.getRowDimension() != A.getColDimension())
 	{
 	    throw std::runtime_error("\nZHPEVX : Non-square matrix input argument  \n");
 	}
 
-    long N = A.getRowDimension();
+    RC_INT N = A.getRowDimension();
 
     if(eigCount > N)
     {
@@ -457,21 +466,21 @@ public :
     double VL = 0;
     double VU = 0;
 
-    long IL = 1;        // Index of smallest eigenvalue returned
-    long IU = eigCount; // Index of largest  eigenvalue returned
+    RC_INT IL = 1;        // Index of smallest eigenvalue returned
+    RC_INT IU = eigCount; // Index of largest  eigenvalue returned
 
     char   DLAMCH_IN = 'S';
     double ABSTOL    =  2.0*(dlamch_(&DLAMCH_IN));
 
-    long M = 0;                     // Number of eigenvalues output
+    RC_INT M = 0;                     // Number of eigenvalues output
 
     eigValues.clear();              // W parameter in original call
     eigValues.resize(N,0.0);
 
-    long LDZ     = 1;
-    double Zdata = 0.0;              // Double value to be used as reference for null eigenvector
+    RC_INT LDZ     = 1;
+    std::complex<double> Zdata = 0.0;              // Double value to be used as reference for null eigenvector
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     WORK.initialize();
     RWORK.clear();
@@ -483,9 +492,12 @@ public :
     IWORK.resize(5*N,0);
     IFAIL.resize(N,0);
 
+    std::complex<double> *APptr  = reinterpret_cast<std::complex<double>*>(AP.mData.getDataPointer());
+    std::complex<double> *WORKptr    = reinterpret_cast<std::complex<double>*>(WORK.mData.getDataPointer());
 
-    zhpevx_(&JOBZ, &RANGE, &UPLO,&N,AP.mData.getDataPointer(),&VL,&VU,&IL,&IU,&ABSTOL,&M,eigValues.data(),
-    &Zdata,&LDZ,WORK.mData.getDataPointer(),RWORK.data(),IWORK.data(),IFAIL.data(),&INFO);
+
+    zhpevx(&JOBZ, &RANGE, &UPLO,&N, APptr,&VL,&VU,&IL,&IU,&ABSTOL,&M,eigValues.data(),
+    &Zdata,&LDZ, WORKptr,RWORK.data(),IWORK.data(),IFAIL.data(),&INFO);
 
     if(INFO != 0)
     {
@@ -503,8 +515,8 @@ public :
 
     SCC::LapackMatrixCmplx16    WORK;
     std::vector<double>        RWORK;
-    std::vector<long>          IWORK;
-    std::vector<long>          IFAIL;
+    std::vector<RC_INT>          IWORK;
+    std::vector<RC_INT>          IFAIL;
 };
 
 
@@ -554,23 +566,23 @@ public :
     char JOBVL  = 'V'; 	// Compute left eigenvectors
     char JOBVR  = 'V'; 	// Compute right eigenvectors
     char SENSE  = 'B';  // Compute left and right eigenvector reciprocal condition numbers
-    long N      = A.getRowDimension();
-    long LDA    = N;
+    RC_INT N      = A.getRowDimension();
+    RC_INT LDA    = N;
 
     eigValues.resize(N,{0.0,0.0});
-    double* eigValuePtr = reinterpret_cast<double*>(const_cast< std::complex<double>* >(&eigValues[0]));
+    std::complex<double> *eigValuePtr = reinterpret_cast<std::complex<double>*>(&eigValues[0]);
 
     eigVecLeft.initialize(N,N);
     eigVecRight.initialize(N,N);
 
-    double* VLptr = eigVecLeft.mData.getDataPointer();
-    long LDVL     = N;
+    std::complex<double>* VLptr =  reinterpret_cast<std::complex<double>*>(eigVecLeft.mData.getDataPointer());
+    RC_INT LDVL     = N;
 
-    double* VRptr = eigVecRight.mData.getDataPointer();
-    long LDVR     = N;
+    std::complex<double>* VRptr =  reinterpret_cast<std::complex<double>*>(eigVecRight.mData.getDataPointer());
+    RC_INT LDVR     = N;
 
-    long ILO      = 0;
-    long IHI      = 0;
+    RC_INT ILO      = 0;
+    RC_INT IHI      = 0;
 
     SCALE.resize(N,0.0);
 
@@ -580,15 +592,18 @@ public :
     RCONDV.resize(N,0.0);
 
     RWORK.resize(2*N,0.0);
-    long INFO = 0;
+    RC_INT INFO = 0;
 
-    long LWORK = N*N + 3*N;
+    RC_INT LWORK = N*N + 3*N;
     WORK.resize(2*LWORK); // 2 X LWORK since need complex*16
 
+    std::complex<double> *ASptr  = reinterpret_cast<std::complex<double>*>(AS.mData.getDataPointer());
+    std::complex<double> *RCONDEptr = reinterpret_cast<std::complex<double>*>(&RCONDEptr[0]);
+    std::complex<double> *WORKptr = reinterpret_cast<std::complex<double>*>(&WORK[0]);
 
-    zgeevx_(&BALANC,&JOBVL, &JOBVR, &SENSE,&N,AS.mData.getDataPointer(), &LDA,
+    zgeevx(&BALANC,&JOBVL, &JOBVR, &SENSE,&N, ASptr, &LDA,
         eigValuePtr, VLptr, &LDVL, VRptr,&LDVR, &ILO, &IHI, &SCALE[0], &ABNRM,
-        &RCONDE[0], &RCONDV[0], &WORK[0],&LWORK, &RWORK[0], &INFO);
+        &RCONDE[0], &RCONDV[0], WORKptr,&LWORK, &RWORK[0], &INFO);
 
     if(INFO != 0)
     {
@@ -644,17 +659,17 @@ public :
 // Selection based on eigenvalues with positive 
 // (including 0) real part. 
 //
-extern "C" int eigSelectRealPos(double* C)
+extern "C" int eigSelectRealPos(std::complex<double>* C)
 {
-    if(C[0] >= 0.0) {return true;} return false;
+    if(C[0].real() >= 0.0) {return true;} return false;
 }
 
 //
 // Selection based on eigenvalues negative real part
 //
-extern "C" int eigSelectRealNeg(double* C)
+extern "C" int eigSelectRealNeg(std::complex<double>* C)
 {
-    if(C[0] < 0.0) {return true;} return false;
+    if(C[0].real() < 0.0) {return true;} return false;
 }
 
 
@@ -685,9 +700,9 @@ enum {NONE, SORT_POS, SORT_NEG};
 void computeSchurDecomposition(const SCC::LapackMatrixCmplx16& A,
 SCC::LapackMatrixCmplx16& Q, SCC::LapackMatrixCmplx16& T,
 std::vector<std::complex<double>>& eigValues,
-long& sortedDim, int sortType = ZGEESX::NONE)
+RC_INT& sortedDim, int sortType = ZGEESX::NONE)
 {
-    long N        =  A.rows;
+    RC_INT N        =  A.rows;
 
     char JOBVS    = 'V'; // Compute Schur vectors
 
@@ -704,7 +719,7 @@ long& sortedDim, int sortType = ZGEESX::NONE)
     sortedDim = 0;
     }
 
-    long NSIZE    =  N;
+    RC_INT NSIZE    =  N;
 
     //
     // Copy in put A to T, zgeesx will overwrite T with
@@ -712,46 +727,50 @@ long& sortedDim, int sortType = ZGEESX::NONE)
     //
 
     T.initialize(A);
-    double*Aptr  = T.mData.getDataPointer();
+    std::complex<double>* Aptr  = reinterpret_cast<std::complex<double>*>(T.mData.getDataPointer());
 
-    long LDA     = N;
+    RC_INT LDA     = N;
 
     SCC::LapackMatrixCmplx16 cEigVals(N,1);
 
     Q.initialize(N,N);
 
-    long LDVS = N;
+    RC_INT LDVS = N;
 
-    long LWORK = (N*(N+1))/2;
+    RC_INT LWORK = (N*(N+1))/2;
     std::vector<double> cWORK(2*LWORK,0.0);
     std::vector<double> RWORK(N,0.0);
 
     std::vector<int> BWORK(N,0); // Using int's for logical, possibly over-allocating memory
                                  // but certainly sufficient.
 
-    long INFO = 0;
+    RC_INT INFO = 0;
+
+    std::complex<double> *cEigValsPtr = reinterpret_cast<std::complex<double>*>(cEigVals.mData.getDataPointer());
+    std::complex<double> *Qptr = reinterpret_cast<std::complex<double>*>(Q.mData.getDataPointer());
+    std::complex<double> *cWORKPtr = reinterpret_cast<std::complex<double>*>(&cWORK[0]);
 
     if(sortType == ZGEESX::SORT_POS)
     {
-    zgeesx_(&JOBVS,&SORTFLAG,eigSelectRealPos,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
-           cEigVals.mData.getDataPointer(),Q.mData.getDataPointer(),&LDVS,
-           &RCONDE,&RCONDV,&cWORK[0],&LWORK,&RWORK[0],&BWORK[0],&INFO);
+    zgeesx(&JOBVS,&SORTFLAG,eigSelectRealPos,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
+            cEigValsPtr, Qptr,&LDVS,
+           &RCONDE,&RCONDV,cWORKPtr,&LWORK,&RWORK[0],&BWORK[0],&INFO);
     }
     else if(sortType == ZGEESX::SORT_NEG)
     {
-    zgeesx_(&JOBVS,&SORTFLAG,eigSelectRealNeg,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
-           cEigVals.mData.getDataPointer(),Q.mData.getDataPointer(),&LDVS,
-           &RCONDE,&RCONDV,&cWORK[0],&LWORK,&RWORK[0],&BWORK[0],&INFO);
+    zgeesx(&JOBVS,&SORTFLAG,eigSelectRealNeg,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
+            cEigValsPtr, Qptr,&LDVS,
+           &RCONDE,&RCONDV,cWORKPtr,&LWORK,&RWORK[0],&BWORK[0],&INFO);
     }
     else
     {
-    	zgeesx_(&JOBVS,&SORTFLAG,eigSelectRealPos,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
-        cEigVals.mData.getDataPointer(),Q.mData.getDataPointer(),&LDVS,
-        &RCONDE,&RCONDV,&cWORK[0],&LWORK,&RWORK[0],&BWORK[0],&INFO);
+    	zgeesx(&JOBVS,&SORTFLAG,eigSelectRealPos,&SENSE,&NSIZE,Aptr,&LDA,&sortedDim,
+        cEigValsPtr, Qptr,&LDVS,
+        &RCONDE,&RCONDV,cWORKPtr,&LWORK,&RWORK[0],&BWORK[0],&INFO);
     }
 
     eigValues.resize(N);
-    for(long k = 0; k < N; k++)
+    for(RC_INT k = 0; k < N; k++)
     {
     eigValues[k] = cEigVals(k);
     }
@@ -772,10 +791,10 @@ long& sortedDim, int sortType = ZGEESX::NONE)
 // computeSchurDecomposition.
 //
 //
-void createInvariantSubpace(long sortedDim, const SCC::LapackMatrixCmplx16& Q, SCC::LapackMatrixCmplx16& V)
+void createInvariantSubpace(RC_INT sortedDim, const SCC::LapackMatrixCmplx16& Q, SCC::LapackMatrixCmplx16& V)
 {
-	long rows = Q.rows;
-	long cols = sortedDim;
+	RC_INT rows = Q.rows;
+	RC_INT cols = sortedDim;
 
     if(sortedDim == 0)
     {
@@ -784,9 +803,9 @@ void createInvariantSubpace(long sortedDim, const SCC::LapackMatrixCmplx16& Q, S
     }
 
 	V.initialize(rows,cols);
-	for(long j = 0; j < cols; j++)
+	for(RC_INT j = 0; j < cols; j++)
 	{
-	for(long i = 0; i < rows; i++)
+	for(RC_INT i = 0; i < rows; i++)
 	{
 	V(i,j) = Q(i,j);
 	}}

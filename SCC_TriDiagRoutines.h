@@ -26,7 +26,7 @@
 // Fortran routines
 //
 // C++  int    ==  Fortran LOGICAL
-// C++  long   ==  Fortran INTEGER
+// C++  RC_INT   ==  Fortran INTEGER
 // C++  double ==  Fortran DOUBLE PRECISION
 //
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -101,10 +101,10 @@ public:
 //##############################################################################
 //
 void realTriLUfactorization(std::vector<double>& DL, std::vector<double>& D, std::vector<double>& DU,
-		                    std::vector<double>& DU2, std::vector<long>& IPIV)
+		                    std::vector<double>& DU2, std::vector<RC_INT>& IPIV)
 {
-	long N = (long)D.size();
-	long INFO = 0;
+	RC_INT N = (RC_INT)D.size();
+	RC_INT INFO = 0;
 
 	IPIV.clear();
 	IPIV.resize(N,0);
@@ -123,14 +123,14 @@ void realTriLUfactorization(std::vector<double>& DL, std::vector<double>& D, std
 }
 
 std::vector<double> realTriLUsolve(std::vector<double>& DL, std::vector<double>& D, std::vector<double>& DU,
-		                           std::vector<double>& DU2, std::vector<long>& IPIV,std::vector<double>& B)
+		                           std::vector<double>& DU2, std::vector<RC_INT>& IPIV,std::vector<double>& B)
 {
-	long N = (long)D.size();
-	long INFO = 0;
+	RC_INT N = (RC_INT)D.size();
+	RC_INT INFO = 0;
 
     char TRANS = 'N';
-    long NRHS = 1;
-    long LDB  = N;
+    RC_INT NRHS = 1;
+    RC_INT LDB  = N;
 
     std::vector<double> X(B);
 
@@ -167,16 +167,16 @@ const std::vector<double> & E, SCC::LapackMatrix & Q)
     double* DPtr   = &Dtmp[0];
     double* EPtr   = &Etmp[0];
 
-    long n  = (long)D.size();
+    RC_INT n  = (RC_INT)D.size();
 
     Q.initialize(n,n);
     Q.setToIdentity();
 
     double* QPtr    = Q.getDataPointer();
 
-    long ldz         =   n;
+    RC_INT ldz         =   n;
     double* workPtr  = new double[2*n + 2];  // work array
-    long info        = 0;
+    RC_INT info        = 0;
 
     dsteqr_(&compz, &n, DPtr, EPtr, QPtr, &ldz,workPtr, &info);
     if(info != 0)
@@ -208,13 +208,13 @@ const std::vector<double> E)
     double* DPtr   = &Dtmp[0];
     double* EPtr   = &Etmp[0];
 
-    long n         = (long)D.size();
+    RC_INT n         = (RC_INT)D.size();
 
     double  ZPtr   =   0;
-    long ldz       =   1;
+    RC_INT ldz       =   1;
 
     double* workPtr  = 0;   // work array not used in this call
-    long info        = 0;
+    RC_INT info        = 0;
 
     dsteqr_(&compz, &n, DPtr, EPtr, &ZPtr, &ldz,workPtr, &info);
     if(info != 0)
@@ -231,10 +231,10 @@ const std::vector<double> E)
 // This routine returns the lowest nValues eigenvalues as a std::vector<double> and
 // sets columns of Q to be the eigenvectors.
 
-std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<double>& D,
+std::vector<double> getLowestSymTriEigSystem(RC_INT nValues, const std::vector<double>& D,
 		const std::vector<double>& U, SCC::LapackMatrix& Q)
 {
-    long N = (long)D.size();
+    RC_INT N = (RC_INT)D.size();
 
 	if(nValues > N)
 	{
@@ -257,11 +257,11 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
 
     char jobz     =  'V';
     char range    =  'I';
-    long n        =    N;
+    RC_INT n        =    N;
     double vLower =  0.0;
     double vUpper =  0.0;
-    long   iLower =    1;       // lower computed eigenvalue index
-    long   iUpper =    nValues; // upper computed eigenvalue index
+    RC_INT   iLower =    1;       // lower computed eigenvalue index
+    RC_INT   iUpper =    nValues; // upper computed eigenvalue index
 
     double abstol = 1.0e-14;
 
@@ -270,17 +270,17 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
 //
 //  Output parameters
 //
-    long mFound = 0;  // number of eigenvalues found
+    RC_INT mFound = 0;  // number of eigenvalues found
 
     double* ePtr   = &eVals[0]; // array for the eigenvalues
     double* vPtr   = Q.getDataPointer();    // array for the eigenvectors
-    long   ldz     = N;
+    RC_INT   ldz     = N;
 
     double* work   = new double[5*N];   // work array
-    long*  iwork   = new long[5*N];     // work array
+    RC_INT*  iwork   = new RC_INT[5*N];     // work array
 
-    long*   ifail = new long[N];
-    long    info  = 0;
+    RC_INT*   ifail = new RC_INT[N];
+    RC_INT    info  = 0;
 
     dstevx_(&jobz, &range, &n, dPtr,uPtr,&vLower, &vUpper, &iLower, &iUpper,
     &abstol, &mFound, ePtr, vPtr, &ldz, work, iwork, ifail, &info);
@@ -300,7 +300,7 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
 
     eValsReturn.resize(mFound);
 
-    for(long i = 0; i < mFound; i++)
+    for(RC_INT i = 0; i < mFound; i++)
     {
     	eValsReturn[i] = eVals[i];
     }
@@ -318,12 +318,12 @@ std::vector<double> getLowestSymTriEigSystem(long nValues, const std::vector<dou
 //  the interval (lambdaMin, lambdaMax]. The array eigVals contains the
 //  eigenvalues and the first M columns of Q contain the eigenvectors.
 ///
-long  getLowestSymTriEigSystem(double lambdaMin, double lambdaMax, const std::vector<double>& D,  const std::vector<double>& U, std::vector<double>& eigVals,
+RC_INT  getLowestSymTriEigSystem(double lambdaMin, double lambdaMax, const std::vector<double>& D,  const std::vector<double>& U, std::vector<double>& eigVals,
 SCC::LapackMatrix& Q)
 {
-    long i;
+    RC_INT i;
 
-    long N = (long)D.size();
+    RC_INT N = (RC_INT)D.size();
 
     std::vector<double> eVals(N);
 
@@ -336,11 +336,11 @@ SCC::LapackMatrix& Q)
 //
     char jobz     =  'V';
     char range    =  'V';
-    long n        =    N;
+    RC_INT n        =    N;
     double vLower =  lambdaMin;
     double vUpper =  lambdaMax;
-    long   iLower =    0;
-    long   iUpper =    0;         // upper computed eigenvalue index
+    RC_INT   iLower =    0;
+    RC_INT   iUpper =    0;         // upper computed eigenvalue index
 
     double abstol = 1.0e-14;
 
@@ -349,17 +349,17 @@ SCC::LapackMatrix& Q)
 //
 //  Output parameters
 //
-    long mFound = 0;  // number of eigenvalues found
+    RC_INT mFound = 0;  // number of eigenvalues found
 
     double* ePtr   = &eVals[0];             // array for the eigenvalues
     double* vPtr   = Q.getDataPointer();    // array for the eigenvectors
-    long   ldz     = N;
+    RC_INT   ldz     = N;
 
     double* work   = new double[5*N];   // work array
-    long*  iwork   = new long[5*N];     // work array
+    RC_INT*  iwork   = new RC_INT[5*N];     // work array
 
-    long*   ifail = new long[N];
-    long    info  = 0;
+    RC_INT*   ifail = new RC_INT[N];
+    RC_INT    info  = 0;
 
 
     dstevx_(&jobz, &range, &n, dPtr,uPtr,&vLower, &vUpper, &iLower, &iUpper,
@@ -395,11 +395,11 @@ SCC::LapackMatrix& Q)
 
 
 
-std::vector<double> getLowestSymTriEigValues(long nValues, std::vector<double> & D,  std::vector<double> & U)
+std::vector<double> getLowestSymTriEigValues(RC_INT nValues, std::vector<double> & D,  std::vector<double> & U)
 {
-    long i;
+    RC_INT i;
 
-    long N = (long)D.size();
+    RC_INT N = (RC_INT)D.size();
 
     std::vector<double>  eVals(N);
 
@@ -416,11 +416,11 @@ std::vector<double> getLowestSymTriEigValues(long nValues, std::vector<double> &
 
     char range    =  'I';
     char order    =  'E';
-    long n        =    N;
+    RC_INT n        =    N;
     double vLower =  0.0;
     double vUpper =  0.0;
-    long   iLower =    1;       // lower computed eigenvalue index
-    long   iUpper =    nValues; // upper computed eigenvalue index
+    RC_INT   iLower =    1;       // lower computed eigenvalue index
+    RC_INT   iUpper =    nValues; // upper computed eigenvalue index
 
     double abstol = 1.0e-14;
 
@@ -429,17 +429,17 @@ std::vector<double> getLowestSymTriEigValues(long nValues, std::vector<double> &
 //
 //  Output parameters
 //
-    long mFound = 0;   // number of eigenvalues found
-    long nsplit = 0;   // number of diagonal blocks
+    RC_INT mFound = 0;   // number of eigenvalues found
+    RC_INT nsplit = 0;   // number of diagonal blocks
 
     double* ePtr   = &eVals[0]; // array for the eigenvalues
-    long*   iblock = new long[N];
-    long*   isplit = new long[N];
+    RC_INT*   iblock = new RC_INT[N];
+    RC_INT*   isplit = new RC_INT[N];
 
     double* work   = new double[4*N];   // work array
-    long*  iwork   = new long[3*N];     // work array
+    RC_INT*  iwork   = new RC_INT[3*N];     // work array
 
-    long   info = 0;
+    RC_INT   info = 0;
 
     dstebz_(&range, &order, &n, &vLower, &vUpper, &iLower, &iUpper,
     &abstol, dPtr, uPtr, &mFound, &nsplit, ePtr, iblock, isplit, work, iwork, &info);
@@ -469,12 +469,12 @@ std::vector<double> getLowestSymTriEigValues(long nValues, std::vector<double> &
 }
 
 
-long  getLowestSymTriEigValues(double lowerLimit, double upperLimit,
+RC_INT  getLowestSymTriEigValues(double lowerLimit, double upperLimit,
 std::vector<double>& D, std::vector<double>& U,std::vector<double>& eigVals)
 {
-    long i;
+    RC_INT i;
 
-    long N = (long)D.size();
+    RC_INT N = (RC_INT)D.size();
 
     std::vector<double>  eVals(N);
 //
@@ -482,11 +482,11 @@ std::vector<double>& D, std::vector<double>& U,std::vector<double>& eigVals)
 //
     char range    =  'V';
     char order    =  'E';
-    long n        =   N;
+    RC_INT n        =   N;
     double vLower =  lowerLimit;
     double vUpper =  upperLimit;
-    long   iLower =    1; // lower computed eigenvalue index
-    long   iUpper =    1; // upper computed eigenvalue index
+    RC_INT   iLower =    1; // lower computed eigenvalue index
+    RC_INT   iUpper =    1; // upper computed eigenvalue index
 
     double abstol = 1.0e-14;
 
@@ -495,16 +495,16 @@ std::vector<double>& D, std::vector<double>& U,std::vector<double>& eigVals)
 //
 //  Output parameters
 //
-    long mFound = 0;   // number of eigenvalues found
-    long nsplit = 1;   // number of diagonal blocks
+    RC_INT mFound = 0;   // number of eigenvalues found
+    RC_INT nsplit = 1;   // number of diagonal blocks
 
     double* ePtr   = &eVals[0]; // array for the eigenvalues
-    long*   iblock = new long[N];
-    long*   isplit = new long[N];
+    RC_INT*   iblock = new RC_INT[N];
+    RC_INT*   isplit = new RC_INT[N];
 
     double* work   = new double[4*N];   // work array
-    long*  iwork   = new long[3*N];     // work array
-    long   info    = 0;
+    RC_INT*  iwork   = new RC_INT[3*N];     // work array
+    RC_INT   info    = 0;
 
 
 

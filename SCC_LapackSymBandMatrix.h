@@ -39,7 +39,7 @@
 #############################################################################
 */
 
-#include "LapackInterface/SCC_LapackMatrix.h"
+#include "SCC_LapackMatrix.h"
 
 #ifndef LAPACK_SYM_BAND_MATRIX_
 #define LAPACK_SYM_BAND_MATRIX_
@@ -60,7 +60,7 @@ class LapackSymBandMatrix
     	initialize(S);
 	}
 
-	LapackSymBandMatrix(long ku, long N)
+	LapackSymBandMatrix(RC_INT ku, RC_INT N)
 	{
 	    initialize(ku,N);
 	}
@@ -79,7 +79,7 @@ class LapackSymBandMatrix
 	    Sp.initialize(S.Sp);
 
 	}
-    void initialize(long ku, long N)
+    void initialize(RC_INT ku, RC_INT N)
 	{
     	this->ku = ku;
     	this->N  = N;
@@ -87,13 +87,13 @@ class LapackSymBandMatrix
 	}
 
 	#ifdef _DEBUG
-	double& operator()(long i, long j)
+	double& operator()(RC_INT i, RC_INT j)
 	{
 		assert(boundsCheck(i,j));
 		return Sp(ku +  (i-j),j);
 	}
 
-    const double& operator()(long i, long j) const
+    const double& operator()(RC_INT i, RC_INT j) const
 	{
     	assert(boundsCheck(i,j));
 		return Sp(ku +  (i-j),j);
@@ -101,13 +101,13 @@ class LapackSymBandMatrix
 
 
 	#else
-	inline double& operator()(long i, long j)
+	inline double& operator()(RC_INT i, RC_INT j)
 	{
 
 		return Sp(ku +  (i-j),j);
 	}
 
-    inline const double& operator()(long i, long j) const
+    inline const double& operator()(RC_INT i, RC_INT j) const
 	{
 		return Sp(ku +  (i-j),j);
 	}
@@ -120,12 +120,12 @@ class LapackSymBandMatrix
 		Sp.setToValue(val);
 	}
 
-    long getDimension()
+    RC_INT getDimension()
     {
     	return N;
     }
 
-    long getSuperDiagonalCount()
+    RC_INT getSuperDiagonalCount()
     {
     	return ku;
     }
@@ -133,20 +133,20 @@ class LapackSymBandMatrix
 
     void applySymmetricBandMatrix(std::vector<double>& x, std::vector<double>& y)
     {
-	long N = getDimension();
+	RC_INT N = getDimension();
 
-	if((long)y.size() != N)  {y.resize(N,0.0);}
+	if((RC_INT)y.size() != N)  {y.resize(N,0.0);}
 
 	char UPLO    = 'U';
-    long K       = ku;
+    RC_INT K       = ku;
     double ALPHA = 1.0;
     double BETA  = 0.0;
     double*Aptr  = Sp.dataPtr;
     double*Xptr  = &x[0];
     double*Yptr  = &y[0];
-    long LDA     = K+1;
-    long INCX    = 1;
-    long INCY    = 1;
+    RC_INT LDA     = K+1;
+    RC_INT INCX    = 1;
+    RC_INT INCY    = 1;
 
     dsbmv_(&UPLO,&N,&K,&ALPHA,Aptr,&LDA,Xptr,&INCX,&BETA,Yptr,&INCY);
     }
@@ -154,7 +154,7 @@ class LapackSymBandMatrix
 // Fortran indexing bounds check
 
 #ifdef _DEBUG
-	bool boundsCheck(long i, long j) const
+	bool boundsCheck(RC_INT i, RC_INT j) const
 	{
         if((i > j)||(j > i+ku))
 	    {
@@ -167,13 +167,13 @@ class LapackSymBandMatrix
 	    return true;
 	}
 #else
-        bool boundsCheck(long, long) const {return true;}
+        bool boundsCheck(RC_INT, RC_INT) const {return true;}
 #endif
 
     SCC::LapackMatrix Sp;
 
-	long ku;
-	long  N;
+	RC_INT ku;
+	RC_INT  N;
 };
 
 } // Namespace SCC

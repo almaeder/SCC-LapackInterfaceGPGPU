@@ -26,7 +26,7 @@
 // Fortran routines
 //
 // C++  int    ==  Fortran LOGICAL
-// C++  long   ==  Fortran INTEGER
+// C++  RC_INT   ==  Fortran INTEGER
 // C++  double ==  Fortran DOUBLE PRECISION
 //
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -204,20 +204,20 @@ class DGBSVX
 
     char TRANS = 'N';
 
-    long N     = ABmatrix.N;
-    long KL    = ABmatrix.kl;
-    long KU    = ABmatrix.ku;
+    RC_INT N     = ABmatrix.N;
+    RC_INT KL    = ABmatrix.kl;
+    RC_INT KU    = ABmatrix.ku;
 
-    long NRHS  = 1;
+    RC_INT NRHS  = 1;
     double* AB = ABmatrix.getDataPointer();
-    long LDAB  = KL + KU + 1;
-    long LDAFB = 2*KL+KU+1;
+    RC_INT LDAB  = KL + KU + 1;
+    RC_INT LDAFB = 2*KL+KU+1;
 
     double* Bptr = &f[0];
-    long LDB     = N;
-    long LDX     = N;
+    RC_INT LDB     = N;
+    RC_INT LDX     = N;
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
     // coeffRHS
     char FACT_TYPE = 'F';
@@ -250,18 +250,18 @@ class DGBSVX
     //char FACT  = 'E':  The matrix A will be equilibrated if necessary, then
     //                   copied to AFB and factored.
 
-    long NRHS  = 0;  // Just factoring so no right hand sides
+    RC_INT NRHS  = 0;  // Just factoring so no right hand sides
 
     char TRANS = 'N';
 
-    long N     = S.N;
-    long KL    = S.kl;
-    long KU    = S.ku;
+    RC_INT N     = S.N;
+    RC_INT KL    = S.kl;
+    RC_INT KU    = S.ku;
 
     ABmatrix.initialize(S);
     double* AB = ABmatrix.getDataPointer();
-    long LDAB  = KL + KU + 1;
-    long LDAFB = 2*KL+KU+1;
+    RC_INT LDAB  = KL + KU + 1;
+    RC_INT LDAFB = 2*KL+KU+1;
 
     AFB.initialize(LDAFB,N);
     IPIV.resize(N);
@@ -274,18 +274,18 @@ class DGBSVX
 
     double doubleNull = 0.0;
     double* Bptr      = &doubleNull;
-    long LDB          = N;
+    RC_INT LDB          = N;
 
     double xNull      = 0.0;
     double* xPtr      = &xNull;
 
-    long LDX           = N;
+    RC_INT LDX           = N;
 
     //double RCOND = 1.0;
     //double FERR;
     //double BERR;
 
-    long INFO = 0;
+    RC_INT INFO = 0;
 
 
     dgbsvx_(&FACT, &TRANS, &N, &KL, &KU, &NRHS, AB, &LDAB, AFB.getDataPointer(), &LDAFB, &IPIV[0], &EQUED,
@@ -345,15 +345,15 @@ class DGBSVX
 
     SCC::LapackBandMatrix ABmatrix;
     SCC::LapackMatrix          AFB;
-    std::vector<long>         IPIV;
+    std::vector<RC_INT>         IPIV;
     std::vector<double>          R;
     std::vector<double>          C;
     std::vector<double>          X;
     std::vector<double>        WORK;
-    std::vector<long>         IWORK;
+    std::vector<RC_INT>         IWORK;
 
 #ifdef _DEBUG
-    bool sizecheckNx1(long bandDim, long rows, long cols) const
+    bool sizecheckNx1(RC_INT bandDim, RC_INT rows, RC_INT cols) const
     {
     if((rows != bandDim) || (cols != 1))
     {
@@ -366,7 +366,7 @@ class DGBSVX
     return true;
     }
 #else
-bool sizecheckNx1(long bandDim, long rows, long cols)  const {return true;}
+bool sizecheckNx1(RC_INT bandDim, RC_INT rows, RC_INT cols)  const {return true;}
 #endif
 
 };

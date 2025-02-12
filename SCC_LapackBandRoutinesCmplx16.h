@@ -24,7 +24,7 @@
 // Fortran routines
 //
 // C++  int                 ==  Fortran LOGICAL
-// C++  long                ==  Fortran INTEGER
+// C++  RC_INT                ==  Fortran INTEGER
 // C++  double              ==  Fortran DOUBLE PRECISION
 // C++ std::complex<double> ==  Fortran COMPLEX*16
 //
@@ -112,7 +112,7 @@ public:
 
     void applyInverse(const LapackBandMatrixCmplx16& A,std::vector <std::complex<double>>& b)
 	{
-    	    assert(A.sizeCheck(A.N,(long)b.size()));
+    	    assert(A.sizeCheck(A.N,(RC_INT)b.size()));
 	        double* bptr =  &(reinterpret_cast<double(&)[2]>(b[0])[0]);
 			applyInverse(A,bptr);
 	}
@@ -123,24 +123,24 @@ public:
     		applyInverse(A,b.mData.dataPtr,b.cols);
 	}
 
-	void applyInverse(const LapackBandMatrixCmplx16& S, double* b, long NRHS = 1)
+	void applyInverse(const LapackBandMatrixCmplx16& S, double* b, RC_INT NRHS = 1)
 	{
 		//assert(A.sizeCheck(A.rows,A.cols));
 
 		char FACT  = 'E'; // Equilibrate, then factor
 		char TRANS = 'N'; // No transpose
 
-		long N     = S.N;
-		long KL    = S.kl;
-		long KU    = S.ku;
+		RC_INT N     = S.N;
+		RC_INT KL    = S.kl;
+		RC_INT KU    = S.ku;
 
 		//
 		// Duplicate input matrix (since this zgbsvx overwrites input matrix)
 		// and allocate temporaries
         //
 
-		long LDAB  = KL + KU + 1;
-		long LDAF  = 2*KL + KU + 1;
+		RC_INT LDAB  = KL + KU + 1;
+		RC_INT LDAF  = 2*KL + KU + 1;
 
 		this->A.initialize(S);
 		this->AF.initialize(LDAF,N);
@@ -148,8 +148,8 @@ public:
 		double* Aptr  =  A.cmplxMdata.mData.dataPtr;
 		double* AFptr =  AF.mData.dataPtr;
 
-		std::vector <long >   IPIV(N);
-		long* IPIVptr      = &IPIV[0];
+		std::vector <RC_INT >   IPIV(N);
+		RC_INT* IPIVptr      = &IPIV[0];
 
 		char  EQED;
 
@@ -161,14 +161,14 @@ public:
 
 		std::vector<double>   B(2*N*NRHS);
 		double* Bptr  =       &B[0];
-	    long LDB      =          N;
+	    RC_INT LDB      =          N;
 
 
 		// b will be overwritten with the solution
 	    // so no need to declare X separately
 
 		double* Xptr   = b;
-		long LDX       = N;
+		RC_INT LDX       = N;
 
 		FERR.resize(NRHS);
 		BERR.resize(NRHS);
@@ -179,11 +179,11 @@ public:
 		std::vector<double>  RWORK(2*N);
 		double* RWORKptr   = &RWORK[0];
 
-		long   INFO = 0;
+		RC_INT   INFO = 0;
 
 		// Assign right hand side to B
 
-		for(long i = 0; i < 2*N*NRHS; i++)
+		for(RC_INT i = 0; i < 2*N*NRHS; i++)
 		{
 			Bptr[i] = b[i];
 		}

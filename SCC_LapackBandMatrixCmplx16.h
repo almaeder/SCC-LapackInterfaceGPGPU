@@ -64,7 +64,7 @@
 #endif
 #endif
 
-#include "LapackInterface/SCC_LapackMatrixCmplx16.h"
+#include "SCC_LapackMatrixCmplx16.h"
 
 #ifndef SCC_LAPACK_BAND_MATRIX_CMPLX_16
 #define SCC_LAPACK_BAND_MATRIX_CMPLX_16
@@ -85,7 +85,7 @@ class LapackBandMatrixCmplx16
     	initialize(S);
 	}
 
-	LapackBandMatrixCmplx16(long kl, long ku, long N)
+	LapackBandMatrixCmplx16(RC_INT kl, RC_INT ku, RC_INT N)
 	{
 	    initialize(kl,ku,N);
 	}
@@ -106,7 +106,7 @@ class LapackBandMatrixCmplx16
 	    cmplxMdata.initialize(S.cmplxMdata);
 
 	}
-    void initialize(long kl, long ku, long N)
+    void initialize(RC_INT kl, RC_INT ku, RC_INT N)
 	{
     	this->kl = kl;
     	this->ku = ku;
@@ -116,13 +116,13 @@ class LapackBandMatrixCmplx16
 
 
 	#ifdef _DEBUG
-	 std::complex<double>& operator()(long i, long j)
+	 std::complex<double>& operator()(RC_INT i, RC_INT j)
 	{
 		assert(boundsCheck(i,j));
 		return cmplxMdata(ku +  (i-j),j);
 	}
 
-    const  std::complex<double>& operator()(long i, long j) const
+    const  std::complex<double>& operator()(RC_INT i, RC_INT j) const
 	{
     	assert(boundsCheck(i,j));
 		return cmplxMdata(ku +  (i-j),j);
@@ -130,12 +130,12 @@ class LapackBandMatrixCmplx16
 
 
 	#else
-	inline std::complex<double>& operator()(long i, long j)
+	inline std::complex<double>& operator()(RC_INT i, RC_INT j)
 	{
 		return cmplxMdata(ku +  (i-j),j);
 	}
 
-    inline const std::complex<double>& operator()(long i, long j) const
+    inline const std::complex<double>& operator()(RC_INT i, RC_INT j) const
 	{
 		return cmplxMdata(ku +  (i-j),j);
 	}
@@ -163,9 +163,9 @@ class LapackBandMatrixCmplx16
     {
     	double valSum = 0.0;
 
-    	for(long i = 0; i < N; i++)
+    	for(RC_INT i = 0; i < N; i++)
     	{
-    	for(long j = std::max((long)0,i- kl); j <= std::min(i+ku,N-1); j++)
+    	for(RC_INT j = std::max((RC_INT)0,i- kl); j <= std::min(i+ku,N-1); j++)
     	{
     	    valSum += std::norm(this->operator()(i,j));
     	}}
@@ -181,9 +181,9 @@ void printDense(std::ostream& outStream, int precision = 3)
 	    std::ios_base::fmtflags ff = outStream.flags();
 	    int precisionCache = outStream.precision(precision);
 
-        for(long i = 0;  i < N; i++)
+        for(RC_INT i = 0;  i < N; i++)
         {
-        for(long j = 0; j <  N; j++)
+        for(RC_INT j = 0; j <  N; j++)
         {
           if((j > i + ku)||(j < i - kl))
           {val =  {0.0,0.0};}
@@ -205,7 +205,7 @@ void printDense(std::ostream& outStream, int precision = 3)
 /*
 	friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrixCmplx16&  V)
 	{
-        long i; long j; std::complex<double> val;
+        RC_INT i; RC_INT j; std::complex<double> val;
 
         for(i = 0;  i < V.N; i++)
         {
@@ -360,9 +360,9 @@ void printDense(std::ostream& outStream, int precision = 3)
     char TRANS     = 'N';
     std::complex<double> ALPHA   = {1.0,0.0};
     std::complex<double> BETA    = {0.0,0.0};
-    long INCX      = 1;
-    long INCY      = 1;
-    long LDA       = kl + ku + 1;
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
+    RC_INT LDA       = kl + ku + 1;
 
     zgbmv_(&TRANS,&N,&N, &kl, &ku,reinterpret_cast<double*>(const_cast< std::complex<double>* >(&ALPHA)),
     this->cmplxMdata.mData.dataPtr, &LDA, x.mData.dataPtr,&INCX,reinterpret_cast<double*>(const_cast< std::complex<double>* >(&BETA)),y.mData.dataPtr,&INCY);
@@ -376,9 +376,9 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     char TRANS     = 'N';
     std::complex<double> ALPHA   = {1.0,0.0};
     std::complex<double> BETA    = {0.0,0.0};
-    long INCX      = 1;
-    long INCY      = 1;
-    long LDA       = kl + ku + 1;
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
+    RC_INT LDA       = kl + ku + 1;
 
     zgbmv_(&TRANS,&N,&N, &kl, &ku,
     reinterpret_cast<double*>(const_cast< std::complex<double>* >(&ALPHA)),this->cmplxMdata.mData.dataPtr, &LDA,
@@ -393,10 +393,10 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
 // Fortran indexing bounds check max(1,j-ku) <= i <= min(N,j+kl)
 
 #ifdef _DEBUG
-	bool boundsCheck(long i, long j) const
+	bool boundsCheck(RC_INT i, RC_INT j) const
 	{
-        long a = (j-ku > 0)   ?  j - ku : 0;
-	    long b = (j+kl < N-1) ?  j + kl : N-1;
+        RC_INT a = (j-ku > 0)   ?  j - ku : 0;
+	    RC_INT b = (j+kl < N-1) ?  j + kl : N-1;
 	    if((i< a) || (i > b))
 	    {
 	    std::cerr  <<  "Band matrix storage error " << std::endl;
@@ -409,7 +409,7 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
 	    return true;
 	}
 
-    bool sizeCheck(long dLower, long dUpper, long Msize) const
+    bool sizeCheck(RC_INT dLower, RC_INT dUpper, RC_INT Msize) const
     {
     	if((dLower != kl)||(dUpper != ku)||(Msize != N))
     	{
@@ -424,7 +424,7 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     }
 
 
-    bool sizecheckNx1(long rows, long cols) const
+    bool sizecheckNx1(RC_INT rows, RC_INT cols) const
     {
     if((rows != N) || (cols != 1))
     {
@@ -438,13 +438,13 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     }
 
 #else
-        bool sizeCheck(long dLower, long dUpper, long Msize) const {return true;};
-        bool boundsCheck(long, long) const {return true;}
-        bool sizecheckNx1(long rows, long cols)  const {return true;};
+        bool sizeCheck(RC_INT dLower, RC_INT dUpper, RC_INT Msize) const {return true;};
+        bool boundsCheck(RC_INT, RC_INT) const {return true;}
+        bool sizecheckNx1(RC_INT rows, RC_INT cols)  const {return true;};
 #endif
 
 #ifdef _DEBUG
-    bool sizeCheck(long size1, long size2)
+    bool sizeCheck(RC_INT size1, RC_INT size2)
     {
     if(size1 != size2)
     {
@@ -454,7 +454,7 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     return true;
     }
 
-    bool sizeCheck(long size1, long size2) const
+    bool sizeCheck(RC_INT size1, RC_INT size2) const
     {
     if(size1 != size2)
     {
@@ -464,15 +464,15 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     return true;
     }
 #else
-    bool sizeCheck(long, long) {return true;}
-    bool sizeCheck(long, long) const{return true;}
+    bool sizeCheck(RC_INT, RC_INT) {return true;}
+    bool sizeCheck(RC_INT, RC_INT) const{return true;}
 #endif
 
     SCC::LapackMatrixCmplx16 cmplxMdata;
 
-	long ku;
-	long kl;
-	long  N;
+	RC_INT ku;
+	RC_INT kl;
+	RC_INT  N;
 };
 
 } // Namespace SCC

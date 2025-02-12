@@ -23,7 +23,7 @@
 // Internally the data storage uses an SCC::LapackMatrix to facilitate the implementation
 // of algebraic operations.
 //
-// Lapack routine dependencies : zgemm_ and zgemv_
+// Lapack routine dependencies : zgemm and zgemv
 /*
 #############################################################################
 #
@@ -45,8 +45,8 @@
 #############################################################################
 */
 
-#include "LapackInterface/SCC_LapackHeaders.h"
-#include "LapackInterface/SCC_LapackMatrix.h"
+#include "SCC_LapackHeaders.h"
+#include "SCC_LapackMatrix.h"
 
 #include <complex>
 #include <cassert>
@@ -73,7 +73,7 @@ public:
     	this->mData = C.mData;
     }
 
-	LapackMatrixCmplx16(long M, long N)
+	LapackMatrixCmplx16(RC_INT M, RC_INT N)
 	{
 		initialize(M,N);
 	}
@@ -90,7 +90,7 @@ public:
 		mData.initialize();
 	}
 
-	void initialize(long M, long N)
+	void initialize(RC_INT M, RC_INT N)
 	{
 	    this->rows = M;
 		this->cols = N;
@@ -117,9 +117,9 @@ public:
 
 		mData.initialize(2*rows,cols);
 
-		for(long j = 0; j < cols; j++)
+		for(RC_INT j = 0; j < cols; j++)
 		{
-		for(long i = 0; i < rows; i++)
+		for(RC_INT i = 0; i < rows; i++)
 		{
 		mData(2*i,  j) = realA(i,j);
 		mData(2*i+1,j) = imagA(i,j);
@@ -128,9 +128,9 @@ public:
 
 	void setToValue(double val)
 	{
-	    for(long j = 0; j < cols; j++)
+	    for(RC_INT j = 0; j < cols; j++)
 		{
-		for(long i = 0; i < rows; i++)
+		for(RC_INT i = 0; i < rows; i++)
 		{
 		mData(2*i,  j) = val;
 		mData(2*i+1,j) = 0.0;
@@ -139,9 +139,9 @@ public:
 
     void setToValue(const std::complex<double>& val)
 	{
-	    for(long j = 0; j < cols; j++)
+	    for(RC_INT j = 0; j < cols; j++)
 		{
-		for(long i = 0; i < rows; i++)
+		for(RC_INT i = 0; i < rows; i++)
 		{
 		mData(2*i,  j) = val.real();
 		mData(2*i+1,j) = val.imag();
@@ -149,28 +149,28 @@ public:
 	}
 
 
-	long getRowDimension() const {return rows;}
-	long getColDimension() const {return cols;}
+	RC_INT getRowDimension() const {return rows;}
+	RC_INT getColDimension() const {return cols;}
 
-	inline void insert(long i, long j, double vReal, double vCplx)
+	inline void insert(RC_INT i, RC_INT j, double vReal, double vCplx)
 	{
 		 mData(2*i,j)      = vReal;
 		 mData(2*i + 1,j)  = vCplx;
 	}
 
-	inline void extract(long i, long j, double& vReal, double& vCplx) const
+	inline void extract(RC_INT i, RC_INT j, double& vReal, double& vCplx) const
 	{
 	     vReal = mData(2*i,j);
 		 vCplx = mData(2*i + 1,j);
 	}
 
-    inline void insert(long i, long j, std::complex<double> z)
+    inline void insert(RC_INT i, RC_INT j, std::complex<double> z)
 	{
 		 mData(2*i,j)      = z.real();
 		 mData(2*i + 1,j)  = z.imag();
 	}
 
-	inline void extract(long i, long j, std::complex<double>& z) const
+	inline void extract(RC_INT i, RC_INT j, std::complex<double>& z) const
 	{
 	     z = std::complex<double>(mData(2*i,j),mData(2*i + 1,j));
 	}
@@ -184,9 +184,9 @@ public:
 	    int precisionCache = outStream.precision(precision);
 	    std::complex<double> val;
 
-        for(long i = 0;  i < rows; i++)
+        for(RC_INT i = 0;  i < rows; i++)
         {
-        for(long j = 0; j <  cols; j++)
+        for(RC_INT j = 0; j <  cols; j++)
         {
           val = this->operator()(i,j);
           outStream <<   std::scientific <<  std::showpos << std::right << std::setw(precision+18) << val << " ";
@@ -201,7 +201,7 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrixCmplx16&  V)
 	{
-        long i; long j;
+        RC_INT i; RC_INT j;
 
         std::ios_base::fmtflags ff = outStream.flags();
 
@@ -228,14 +228,14 @@ public:
     */
 
 	#ifdef _DEBUG
-    std::complex<double>&  operator()(long i, long j)
+    std::complex<double>&  operator()(RC_INT i, RC_INT j)
     {
     assert(boundsCheck(i, 0, rows-1,1));
     assert(boundsCheck(j, 0, cols-1,2));
     return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i) + j*(2*rows))));
     };
 
-    const std::complex<double>&  operator()(long i, long j) const
+    const std::complex<double>&  operator()(RC_INT i, RC_INT j) const
     {
     assert(boundsCheck(i, 0, rows-1,1));
     assert(boundsCheck(j, 0, cols-1,2));
@@ -248,12 +248,12 @@ public:
     is a pointer to the first of two consecutive doubles storing the
     complex value.
     */
-    inline std::complex<double>&  operator()(long i, long j)
+    inline std::complex<double>&  operator()(RC_INT i, RC_INT j)
     {
     	return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i) + j*(2*rows))));
     };
 
-    inline const std::complex<double>&  operator()(long i, long j) const
+    inline const std::complex<double>&  operator()(RC_INT i, RC_INT j) const
     {
     return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i) + j*(2*rows))));;
     };
@@ -268,12 +268,12 @@ public:
 //
 //
 #ifdef _DEBUG
-    std::complex<double>&  operator()(long i)
+    std::complex<double>&  operator()(RC_INT i)
     {
     assert(singleRowOrColCheck());
 
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -283,11 +283,11 @@ public:
     return *(reinterpret_cast<std::complex<double>*>((mData.dataPtr +  (2*i1) + i2*(2*rows))));
     };
 
-    const std::complex<double>&  operator()(long i) const
+    const std::complex<double>&  operator()(RC_INT i) const
     {
     assert(singleRowOrColCheck());
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -302,10 +302,10 @@ public:
     with a single row or column.
     Indexing starting at (0)
     */
-    inline std::complex<double>&  operator()(long i)
+    inline std::complex<double>&  operator()(RC_INT i)
     {
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -317,11 +317,11 @@ public:
     with a single row or column.
     Indexing starting at (0)
      */
-    inline const std::complex<double>&  operator()(long i) const
+    inline const std::complex<double>&  operator()(RC_INT i) const
     {
 
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -337,28 +337,28 @@ public:
     {
 	double valSum = 0.0;
 
-	for(long j = 0; j < cols; j++)
+	for(RC_INT j = 0; j < cols; j++)
 	{
-	for(long i = 0; i < rows; i++)
+	for(RC_INT i = 0; i < rows; i++)
 	{
     		valSum += std::norm(this->operator()(i,j));
     }}
     return std::sqrt(valSum);
     }
 
-    void getColumn(long colIndex, std::vector< std::complex<double>> & Mcol)
+    void getColumn(RC_INT colIndex, std::vector< std::complex<double>> & Mcol)
     {
     	Mcol.resize(rows);
-    	for(long i = 0; i < rows; i++)
+    	for(RC_INT i = 0; i < rows; i++)
     	{
 		Mcol[i] = this->operator()(i,colIndex);
     	}
     }
 
-    void getColumn(long colIndex, LapackMatrixCmplx16 & Mcol)
+    void getColumn(RC_INT colIndex, LapackMatrixCmplx16 & Mcol)
     {
     	Mcol.initialize(rows,1);
-    	for(long i = 0; i < rows; i++)
+    	for(RC_INT i = 0; i < rows; i++)
     	{
 		Mcol(i,0) = this->operator()(i,colIndex);
     	}
@@ -369,29 +369,29 @@ public:
 		realA.initialize(rows,cols);
 		imagA.initialize(rows,cols);
 
-	    for(long j = 0; j < cols; j++)
+	    for(RC_INT j = 0; j < cols; j++)
 		{
-		for(long i = 0; i < rows; i++)
+		for(RC_INT i = 0; i < rows; i++)
 		{
 		realA(i,j) = mData(2*i,j);
 		imagA(i,j) = mData(2*i+1,j);
 		}}
 	}
 
-	void getRealAndCmplxColumn(long colIndex, std::vector<double>& realCol, std::vector<double>& imagCol)
+	void getRealAndCmplxColumn(RC_INT colIndex, std::vector<double>& realCol, std::vector<double>& imagCol)
 	{
 		assert(boundsCheck(colIndex, 0, cols-1,2));
 		realCol.resize(rows);
 		imagCol.resize(rows);
 
-	    for(long i = 0; i < rows; i++)
+	    for(RC_INT i = 0; i < rows; i++)
 		{
 		realCol[i] = mData(2*i,colIndex);
 		imagCol[i] = mData(2*i+1,colIndex);
 		}
 	}
 
-    void getRealAndCmplxColumn(long colIndex, LapackMatrix& realCol, LapackMatrix& imagCol)
+    void getRealAndCmplxColumn(RC_INT colIndex, LapackMatrix& realCol, LapackMatrix& imagCol)
 	{
 		assert(boundsCheck(colIndex, 0, cols-1,2));
 
@@ -399,7 +399,7 @@ public:
 		imagCol.initialize(rows,1);
 
 
-	    for(long i = 0; i < rows; i++)
+	    for(RC_INT i = 0; i < rows; i++)
 		{
 		realCol(i,0) = mData(2*i,colIndex);
 		imagCol(i,0) = mData(2*i+1,colIndex);
@@ -416,12 +416,12 @@ public:
 
 		LapackMatrixCmplx16 AP((rows*(rows+1))/2,1);
 
-		long     ind; long     jnd;
+		RC_INT     ind; RC_INT     jnd;
 		double vReal; double vImag;
 
-		for(long j = 1; j <=cols; j++)
+		for(RC_INT j = 1; j <=cols; j++)
 		{
-		for(long i = 1; i <= j;   i++)
+		for(RC_INT i = 1; i <= j;   i++)
 		{
             ind = i-1;
             jnd = j-1;
@@ -500,9 +500,9 @@ public:
             double aReal = alpha.real();
             double aImag = alpha.imag();
 
-            for(long i = 0; i < rows; i++)
+            for(RC_INT i = 0; i < rows; i++)
             {
-            for(long j = 0; j < cols; j++)
+            for(RC_INT j = 0; j < cols; j++)
             {
             cReal          = mData(2*i,j);
 		    cImag          = mData(2*i+1,j);
@@ -554,9 +554,9 @@ public:
             double aReal = alphaInv.real();
             double aImag = alphaInv.imag();
 
-            for(long i = 0; i < rows; i++)
+            for(RC_INT i = 0; i < rows; i++)
             {
-            for(long j = 0; j < cols; j++)
+            for(RC_INT j = 0; j < cols; j++)
             {
             cReal          = mData(2*i,j);
 		    cImag          = mData(2*i+1,j);
@@ -599,21 +599,21 @@ LapackMatrixCmplx16 operator*(const LapackMatrixCmplx16& B) const
     char TRANSA = 'N';
     char TRANSB = 'N';
 
-    long M       = this->rows;
-    long N       = B.cols;
-    long K       = this->cols;
+    RC_INT M       = this->rows;
+    RC_INT N       = B.cols;
+    RC_INT K       = this->cols;
 
     std::complex<double> ALPHA = {1.0,0.0};
     std::complex<double> BETA  = {0.0,0.0};
 
-    double*Aptr  = mData.getDataPointer();
-    double*Bptr  = B.mData.getDataPointer();
-    double*Cptr  = C.mData.getDataPointer();
-    long LDA     = this->rows;
-    long LDB     = B.rows;
-    long LDC     = C.rows;
+    std::complex<double> *Aptr  = reinterpret_cast<std::complex<double>*>(mData.getDataPointer());
+    std::complex<double> *Bptr  = reinterpret_cast<std::complex<double>*>(B.mData.getDataPointer());
+    std::complex<double> *Cptr  = reinterpret_cast<std::complex<double>*>(C.mData.getDataPointer());
+    RC_INT LDA     = this->rows;
+    RC_INT LDB     = B.rows;
+    RC_INT LDC     = C.rows;
 
-    zgemm_(&TRANSA,&TRANSB,&M,&N,&K,reinterpret_cast<double*>(&ALPHA), Aptr,&LDA,Bptr,&LDB,reinterpret_cast<double*>(&BETA),Cptr,&LDC);
+    zgemm(&TRANSA,&TRANSB,&M,&N,&K,&ALPHA, Aptr,&LDA,Bptr,&LDB,&BETA,Cptr,&LDC);
     return C;
 }
 
@@ -625,11 +625,13 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
     char TRANS     = 'N';
     std::complex<double> ALPHA = {1.0,0.0};
     std::complex<double> BETA  = {0.0,0.0};
-    long INCX      = 1;
-    long INCY      = 1;
 
-    zgemv_(&TRANS,&rows,&cols,reinterpret_cast<double*>(&ALPHA),mData.getDataPointer(),&rows,
-    reinterpret_cast<double*>(const_cast< std::complex<double>* >(&x[0])),&INCX,reinterpret_cast<double*>(&BETA),reinterpret_cast<double*>(&y[0]),&INCY);
+    std::complex<double> *Aptr  = reinterpret_cast<std::complex<double>*>(mData.getDataPointer());
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
+
+    zgemv(&TRANS,&rows,&cols,&ALPHA, Aptr, &rows,
+        const_cast< std::complex<double>* >(&x[0]),&INCX, &BETA, &y[0],&INCY);
 	return y;
 }
 
@@ -637,9 +639,9 @@ std::vector< std::complex<double> > operator*(const std::vector< std::complex<do
 LapackMatrixCmplx16 conjugateTranspose() const
 {
 	LapackMatrixCmplx16 R(cols,rows);
-	for(long i = 0; i < rows; i++)
+	for(RC_INT i = 0; i < rows; i++)
 	{
-		for(long j = 0; j < cols; j++)
+		for(RC_INT j = 0; j < cols; j++)
 		{
 			R(j,i) = {this->operator()(i,j).real(), -this->operator()(i,j).imag()};
 		}
@@ -649,7 +651,7 @@ LapackMatrixCmplx16 conjugateTranspose() const
 
 
 #ifdef _DEBUG
-        bool boundsCheck(long i, long begin, long end,int coordinate) const
+        bool boundsCheck(RC_INT i, RC_INT begin, RC_INT end,int coordinate) const
         {
         if((i < begin)||(i  > end))
         {
@@ -660,7 +662,7 @@ LapackMatrixCmplx16 conjugateTranspose() const
         return true;
         }
 #else
-        bool boundsCheck(long, long, long,int) const {return true;}
+        bool boundsCheck(RC_INT, RC_INT, RC_INT,int) const {return true;}
 #endif
 
 
@@ -681,7 +683,7 @@ LapackMatrixCmplx16 conjugateTranspose() const
 #endif
 
 #ifdef _DEBUG
-    bool sizeCheck(long size1, long size2)
+    bool sizeCheck(RC_INT size1, RC_INT size2)
     {
     if(size1 != size2)
     {
@@ -691,7 +693,7 @@ LapackMatrixCmplx16 conjugateTranspose() const
     return true;
     }
 
-    bool sizeCheck(long size1, long size2) const
+    bool sizeCheck(RC_INT size1, RC_INT size2) const
     {
     if(size1 != size2)
     {
@@ -701,13 +703,13 @@ LapackMatrixCmplx16 conjugateTranspose() const
     return true;
     }
 #else
-    bool sizeCheck(long, long) {return true;}
-    bool sizeCheck(long, long) const{return true;}
+    bool sizeCheck(RC_INT, RC_INT) {return true;}
+    bool sizeCheck(RC_INT, RC_INT) const{return true;}
 #endif
 
 
-	long rows;
-	long cols;
+	RC_INT rows;
+	RC_INT cols;
 	SCC::LapackMatrix mData;
 
 };

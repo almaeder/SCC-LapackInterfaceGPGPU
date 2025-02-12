@@ -91,7 +91,7 @@ class LapackBandMatrix
     	initialize(S);
 	}
 
-	LapackBandMatrix(long kl, long ku, long N)
+	LapackBandMatrix(RC_INT kl, RC_INT ku, RC_INT N)
 	{
 	    initialize(kl,ku,N);
 	}
@@ -112,7 +112,7 @@ class LapackBandMatrix
 	    mData.initialize(S.mData);
 
 	}
-    void initialize(long kl, long ku, long N)
+    void initialize(RC_INT kl, RC_INT ku, RC_INT N)
 	{
     	this->kl = kl;
     	this->ku = ku;
@@ -122,13 +122,13 @@ class LapackBandMatrix
 
 
 	#ifdef _DEBUG
-	double& operator()(long i, long j)
+	double& operator()(RC_INT i, RC_INT j)
 	{
 		assert(boundsCheck(i,j));
 		return mData(ku +  (i-j),j);
 	}
 
-    const double& operator()(long i, long j) const
+    const double& operator()(RC_INT i, RC_INT j) const
 	{
     	assert(boundsCheck(i,j));
 		return mData(ku +  (i-j),j);
@@ -138,13 +138,13 @@ class LapackBandMatrix
 
 
 	#else
-	inline double& operator()(long i, long j)
+	inline double& operator()(RC_INT i, RC_INT j)
 	{
 
 		return mData(ku +  (i-j),j);
 	}
 
-    inline const double& operator()(long i, long j) const
+    inline const double& operator()(RC_INT i, RC_INT j) const
 	{
 		return mData(ku +  (i-j),j);
 	}
@@ -246,7 +246,7 @@ class LapackBandMatrix
     void setToIdentity()
     {
     	setToValue(0.0);
-    	for(long k = 0; k < N; k++)
+    	for(RC_INT k = 0; k < N; k++)
     	{
     	this->operator()(k,k) = 1.0;
     	}
@@ -254,7 +254,7 @@ class LapackBandMatrix
 
     void setDiagonal(const std::vector<double>& diag)
     {
-    	for(long k = 0; k < N; k++)
+    	for(RC_INT k = 0; k < N; k++)
     	{
     		this->operator()(k,k) = diag[k];
     	}
@@ -265,9 +265,9 @@ class LapackBandMatrix
     	double val    = 0.0;
     	double valSum = 0.0;
 
-    	for(long i = 0; i < N; i++)
+    	for(RC_INT i = 0; i < N; i++)
     	{
-    	for(long j = std::max((long)0,i- kl); j <= std::min(i+ku,N-1); j++)
+    	for(RC_INT j = std::max((RC_INT)0,i- kl); j <= std::min(i+ku,N-1); j++)
     	{
     		val = this->operator()(i,j);
     		valSum += val*val;
@@ -288,8 +288,8 @@ class LapackBandMatrix
     char TRANS     = 'N';
     double ALPHA   = 1.0;
     double BETA    = 0.0;
-    long INCX      = 1;
-    long INCY      = 1;
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
 
 
     /*
@@ -313,8 +313,8 @@ class LapackBandMatrix
     char TRANS     = 'N';
     double ALPHA   = 1.0;
     double BETA    = 0.0;
-    long INCX      = 1;
-    long INCY      = 1;
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
 
     /*
      DGBMV  performs one of the matrix-vector operations
@@ -338,9 +338,9 @@ void printDense(std::ostream& outStream, int precision = 3)
         std::ios_base::fmtflags ff = outStream.flags();
         int precisionCache = outStream.precision(precision);
 
-        for(long i = 0;  i < N; i++)
+        for(RC_INT i = 0;  i < N; i++)
         {
-        for(long j = 0; j <  N; j++)
+        for(RC_INT j = 0; j <  N; j++)
         {
           if((j > i + ku)||(j < i - kl))
           {val = 0.0;}
@@ -362,7 +362,7 @@ void printDense(std::ostream& outStream, int precision = 3)
 //
 friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&  V)
 {
-        long i; long j; double val;
+        RC_INT i; RC_INT j; double val;
 
         for(i = 0;  i < V.N; i++)
         {
@@ -384,10 +384,10 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
 // Fortran indexing bounds check max(1,j-ku) <= i <= min(N,j+kl)
 
 #ifdef _DEBUG
-	bool boundsCheck(long i, long j) const
+	bool boundsCheck(RC_INT i, RC_INT j) const
 	{
-        long a = (j-ku > 0)   ?  j - ku : 0;
-	    long b = (j+kl < N-1) ?  j + kl : N-1;
+        RC_INT a = (j-ku > 0)   ?  j - ku : 0;
+	    RC_INT b = (j+kl < N-1) ?  j + kl : N-1;
 	    if((i< a) || (i > b))
 	    {
 	    std::cerr  <<  "Band matrix storage error " << std::endl;
@@ -401,7 +401,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
 	}
 
 
-    bool sizeCheck(long dLower, long dUpper, long Msize) const
+    bool sizeCheck(RC_INT dLower, RC_INT dUpper, RC_INT Msize) const
     {
     	if((dLower != kl)||(dUpper != ku)||(Msize != N))
     	{
@@ -415,7 +415,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
     	return true;
     }
 
-    bool sizecheckNx1(long rows, long cols) const
+    bool sizecheckNx1(RC_INT rows, RC_INT cols) const
     {
     if((rows != N) || (cols != 1))
     {
@@ -428,13 +428,13 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
     return true;
     }
 #else
-        bool boundsCheck(long, long) const {return true;}
-        bool sizeCheck(long dLower, long dUpper, long Msize) const {return true;}
-        bool sizecheckNx1(long rows, long cols)  const {return true;}
+        bool boundsCheck(RC_INT, RC_INT) const {return true;}
+        bool sizeCheck(RC_INT dLower, RC_INT dUpper, RC_INT Msize) const {return true;}
+        bool sizecheckNx1(RC_INT rows, RC_INT cols)  const {return true;}
 #endif
 
 #ifdef _DEBUG
-    bool sizeCheck(long size1, long size2)
+    bool sizeCheck(RC_INT size1, RC_INT size2)
     {
     if(size1 != size2)
     {
@@ -444,7 +444,7 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
     return true;
     }
 
-    bool sizeCheck(long size1, long size2) const
+    bool sizeCheck(RC_INT size1, RC_INT size2) const
     {
     if(size1 != size2)
     {
@@ -454,8 +454,8 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
     return true;
     }
 #else
-    bool sizeCheck(long, long) {return true;}
-    bool sizeCheck(long, long) const{return true;}
+    bool sizeCheck(RC_INT, RC_INT) {return true;}
+    bool sizeCheck(RC_INT, RC_INT) const{return true;}
 #endif
 
 
@@ -463,9 +463,9 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackBandMatrix&
 
     SCC::LapackMatrix mData;
 
-	long ku;
-	long kl;
-	long  N;
+	RC_INT ku;
+	RC_INT kl;
+	RC_INT  N;
 };
 
 } // Namespace SCC

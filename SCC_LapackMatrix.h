@@ -21,12 +21,12 @@
 //
 // C++  char   ==  Fortran character
 // C++  int    ==  Fortran LOGICAL
-// C++  long   ==  Fortran INTEGER
+// C++  RC_INT   ==  Fortran INTEGER
 // C++  double ==  Fortran DOUBLE PRECISION
 //
 // Linking to the Fortran routines using -llapack -lblas
 //
-// Lapack routine dependencies : dgemm_ and dgemv_
+// Lapack routine dependencies : dgemm and dgemv
 /*
 #############################################################################
 #
@@ -85,7 +85,7 @@ public:
 	cols           = 0;
 	}
 
-	LapackMatrix(long rows, long cols)
+	LapackMatrix(RC_INT rows, RC_INT cols)
 	{
 	dataPtr        = nullptr;
 	externDataFlag = false;
@@ -101,7 +101,7 @@ public:
 	// be stored in column major order (Fortran convention)
 	//
 
-	LapackMatrix(long rows, long cols, double* dataPtr)
+	LapackMatrix(RC_INT rows, RC_INT cols, double* dataPtr)
 	{
 	initialize(rows,cols,dataPtr);
 	}
@@ -155,7 +155,7 @@ public:
     // This initialize always creates (or uses) a
     // local memory allocation.
     //
-	void initialize(long rows, long cols)
+	void initialize(RC_INT rows, RC_INT cols)
 	{
 	    // Re-use existing allocation if possible
 
@@ -176,7 +176,7 @@ public:
 
 		this->rows       = rows;
 		this->cols       = cols;
-		for(long i = 0; i < rows*cols; i++) {dataPtr[i] =0.0;}
+		for(RC_INT i = 0; i < rows*cols; i++) {dataPtr[i] =0.0;}
 	}
 
     //
@@ -203,7 +203,7 @@ public:
 
 		this->rows = M.rows;
 		this->cols = M.cols;
-		for(long i = 0; i < rows*cols; i++)
+		for(RC_INT i = 0; i < rows*cols; i++)
 		{
 			dataPtr[i] = M.dataPtr[i];
 		}
@@ -224,7 +224,7 @@ public:
 	// on the size of the double* array.
 	//
 
-	void initialize(long rows, long cols, double* dataPtr)
+	void initialize(RC_INT rows, RC_INT cols, double* dataPtr)
 	{
 		externDataFlag = true;
 		this->rows     = rows;
@@ -233,14 +233,14 @@ public:
 	}
 
 #ifdef _DEBUG
-    double&  operator()(long i1, long i2)
+    double&  operator()(RC_INT i1, RC_INT i2)
     {
     assert(boundsCheck(i1, 0, rows-1,1));
     assert(boundsCheck(i2, 0, cols-1,2));
     return *(dataPtr +  i1 + i2*rows);
     };
 
-    const double&  operator()(long i1, long i2) const
+    const double&  operator()(RC_INT i1, RC_INT i2) const
     {
     assert(boundsCheck(i1, 0, rows-1,1));
     assert(boundsCheck(i2, 0, cols-1,2));
@@ -252,7 +252,7 @@ public:
     Returns a reference to the element with index (i1,i2) - indexing
     starting at (0,0).
     */
-    inline double&  operator()(long i1, long i2)
+    inline double&  operator()(RC_INT i1, RC_INT i2)
     {
     return *(dataPtr +  i1 + i2*rows);
     };
@@ -261,7 +261,7 @@ public:
     Returns a reference to the element with index (i1,i2) - indexing
     starting at (0,0).
      */
-    inline const double&  operator()(long i1, long i2) const
+    inline const double&  operator()(RC_INT i1, RC_INT i2) const
     {
     return *(dataPtr +   i1  + i2*rows);
     };
@@ -276,12 +276,12 @@ public:
 //
 //
 #ifdef _DEBUG
-    double&  operator()(long i)
+    double&  operator()(RC_INT i)
     {
     assert(singleRowOrColCheck());
 
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -291,11 +291,11 @@ public:
     return *(dataPtr +  i1 + i2*rows);
     };
 
-    const double&  operator()(long i) const
+    const double&  operator()(RC_INT i) const
     {
     assert(singleRowOrColCheck());
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -310,10 +310,10 @@ public:
     with a single row or column.
     Indexing starting at (0)
     */
-    inline double&  operator()(long i)
+    inline double&  operator()(RC_INT i)
     {
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -325,11 +325,11 @@ public:
     with a single row or column.
     Indexing starting at (0)
      */
-    inline const double&  operator()(long i) const
+    inline const double&  operator()(RC_INT i) const
     {
 
-    long i1 = i;
-    long i2 = i;
+    RC_INT i1 = i;
+    RC_INT i2 = i;
     if     (cols == 1) {i2 = 0;}
     else if(rows == 1) {i1 = 0;}
 
@@ -351,7 +351,7 @@ public:
 
         assert(sizeCheck(this->rows,B.rows));
     	assert(sizeCheck(this->cols,B.cols));
-    	for(long i = 0; i < rows*cols; i++)
+    	for(RC_INT i = 0; i < rows*cols; i++)
     	{
     		dataPtr[i] = B.dataPtr[i];
     	}
@@ -362,7 +362,7 @@ public:
     {
     	assert(sizeCheck(this->rows,B.rows));
     	assert(sizeCheck(this->cols,B.cols));
-    	for(long i = 0; i < rows*cols; i++)
+    	for(RC_INT i = 0; i < rows*cols; i++)
     	{
     		dataPtr[i] += B.dataPtr[i];
     	}
@@ -382,7 +382,7 @@ public:
     {
       assert(sizeCheck(this->rows,D.rows));
       assert(sizeCheck(this->cols,D.cols));
-      for(long i = 0; i < rows*cols; i++)
+      for(RC_INT i = 0; i < rows*cols; i++)
       {
     		dataPtr[i] -= D.dataPtr[i];
       }
@@ -401,7 +401,7 @@ public:
 
     inline void operator*=(const double alpha)
     {
-    for(long i = 0; i < rows*cols; i++)
+    for(RC_INT i = 0; i < rows*cols; i++)
     {
     		dataPtr[i] *= alpha;
     }
@@ -423,7 +423,7 @@ public:
 
     inline void operator/=(const double alpha)
     {
-    for(long i = 0; i < rows*cols; i++)
+    for(RC_INT i = 0; i < rows*cols; i++)
     {
     		dataPtr[i] /= alpha;
     }
@@ -445,7 +445,7 @@ public:
 
     void setToValue(double val)
     {
-      for(long i = 0; i < rows*cols; i++)
+      for(RC_INT i = 0; i < rows*cols; i++)
       {
     		dataPtr[i] = val;
       }
@@ -454,9 +454,9 @@ public:
     void setToIdentity()
     {
     setToValue(0.0);
-    long dimMin = (rows < cols) ? rows : cols;
+    RC_INT dimMin = (rows < cols) ? rows : cols;
 
-    for(long k = 0; k < dimMin; k++)
+    for(RC_INT k = 0; k < dimMin; k++)
     {
     	this->operator()(k,k) = 1.0;
     }
@@ -465,9 +465,9 @@ public:
 
     void setDiagonal(const std::vector<double>& diag)
     {
-    	long kMax = (rows < cols) ? rows : cols;
-    	kMax      = ((long)diag.size() < kMax) ? (long)diag.size() : kMax;
-    	for(long k = 0; k < kMax; k++)
+    	RC_INT kMax = (rows < cols) ? rows : cols;
+    	kMax      = ((RC_INT)diag.size() < kMax) ? (RC_INT)diag.size() : kMax;
+    	for(RC_INT k = 0; k < kMax; k++)
     	{
     		this->operator()(k,k) = diag[k];
     	}
@@ -475,10 +475,10 @@ public:
 
     void scaleRows(const std::vector<double>& rowScaleFactors)
     {
-    	assert(sizeCheck(this->rows,(long)rowScaleFactors.size()));
-    	for(long i = 0; i < rows; i++)
+    	assert(sizeCheck(this->rows,(RC_INT)rowScaleFactors.size()));
+    	for(RC_INT i = 0; i < rows; i++)
     	{
-    		for(long j = 0; j < cols; j++)
+    		for(RC_INT j = 0; j < cols; j++)
     		{
     		this->operator()(i,j) *= rowScaleFactors[i];
     		}
@@ -487,10 +487,10 @@ public:
 
     void scaleCols(const std::vector<double>& colScaleFactors)
     {
-    	assert(sizeCheck(this->cols,(long)colScaleFactors.size()));
-    	for(long j = 0; j < cols; j++)
+    	assert(sizeCheck(this->cols,(RC_INT)colScaleFactors.size()));
+    	for(RC_INT j = 0; j < cols; j++)
     	{
-    	for(long i = 0; i < rows; i++)
+    	for(RC_INT i = 0; i < rows; i++)
     	{
 
     		this->operator()(i,j) *= colScaleFactors[j];
@@ -509,19 +509,19 @@ LapackMatrix operator*(const LapackMatrix& B) const
     char TRANSA = 'N';
     char TRANSB = 'N';
 
-    long M       = this->rows;
-    long N       = B.cols;
-    long K       = this->cols;
+    RC_INT M       = this->rows;
+    RC_INT N       = B.cols;
+    RC_INT K       = this->cols;
     double ALPHA = 1.0;
     double BETA  = 0.0;
     double*Aptr  = dataPtr;
     double*Bptr  = B.dataPtr;
     double*Cptr  = C.dataPtr;
-    long LDA     = this->rows;
-    long LDB     = B.rows;
-    long LDC     = C.rows;
+    RC_INT LDA     = this->rows;
+    RC_INT LDB     = B.rows;
+    RC_INT LDC     = C.rows;
 
-    dgemm_(&TRANSA,&TRANSB,&M,&N,&K,&ALPHA, Aptr,&LDA,Bptr,&LDB,&BETA,Cptr,&LDC);
+    dgemm(&TRANSA,&TRANSB,&M,&N,&K,&ALPHA, Aptr,&LDA,Bptr,&LDB,&BETA,Cptr,&LDC);
     return C;
 }
 
@@ -533,10 +533,10 @@ std::vector<double> operator*(const std::vector<double>& x)
     char TRANS     = 'N';
     double ALPHA   = 1.0;
     double BETA    = 0.0;
-    long INCX      = 1;
-    long INCY      = 1;
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
 
-    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
+    dgemv(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
 	return y;
 }
 
@@ -550,10 +550,10 @@ std::vector<double> applyTranspose(const std::vector<double>& x)
     char TRANS     = 'T';
     double ALPHA   = 1.0;
     double BETA    = 0.0;
-    long INCX      = 1;
-    long INCY      = 1;
+    RC_INT INCX      = 1;
+    RC_INT INCY      = 1;
 
-    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
+    dgemv(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,const_cast<double*>(&x[0]),&INCX,&BETA,&y[0],&INCY);
 	return y;
 }
 
@@ -561,9 +561,9 @@ std::vector<double> applyTranspose(const std::vector<double>& x)
 LapackMatrix transpose() const
 {
 	LapackMatrix R(cols,rows);
-	for(long i = 0; i < rows; i++)
+	for(RC_INT i = 0; i < rows; i++)
 	{
-		for(long j = 0; j < cols; j++)
+		for(RC_INT j = 0; j < cols; j++)
 		{
 			R(j,i) = this->operator()(i,j);
 		}
@@ -574,7 +574,7 @@ LapackMatrix transpose() const
 double normFrobenius() const
 {
 	double valSum = 0.0;
-    for(long i = 0; i < rows*cols; i++)
+    for(RC_INT i = 0; i < rows*cols; i++)
     {
     		valSum += dataPtr[i]*dataPtr[i];
     }
@@ -585,36 +585,36 @@ double elementMaxAbs() const
 {
     if(rows*cols == 0) return 0.0;
 	double val = std::abs(dataPtr[0]);
-    for(long i = 0; i < rows*cols; i++)
+    for(RC_INT i = 0; i < rows*cols; i++)
     {
     		val = (val > std::abs(dataPtr[i])) ? val : std::abs(dataPtr[i]);
     }
     return val;
 }
 
-std::vector<double> getColumn(long colIndex) const
+std::vector<double> getColumn(RC_INT colIndex) const
 {
 	std::vector<double> r(rows,0.0);
-	for(long i = 0; i < rows; i++)
+	for(RC_INT i = 0; i < rows; i++)
 	{
 	r[i]=operator()(i,colIndex);
     }
 	return r;
 }
 
-void insertColumn(const std::vector<double> colVals, long colIndex)
+void insertColumn(const std::vector<double> colVals, RC_INT colIndex)
 {
-	for(long i = 0; i < rows; i++)
+	for(RC_INT i = 0; i < rows; i++)
 	{
 	operator()(i,colIndex) = colVals[i];
     }
 }
 
-void swapColumns(long colA, long colB)
+void swapColumns(RC_INT colA, RC_INT colB)
 {
 	double val;
 
-    for(long i = 0; i < rows; i++)
+    for(RC_INT i = 0; i < rows; i++)
 	{
     val = operator()(i,colA);
 	operator()(i,colA) = operator()(i,colB);
@@ -622,13 +622,13 @@ void swapColumns(long colA, long colB)
     }
 }
 
-LapackMatrix getRowSlice(long rowStartIndex, long rowEndIndex)
+LapackMatrix getRowSlice(RC_INT rowStartIndex, RC_INT rowEndIndex)
 {
 	LapackMatrix M((rowEndIndex-rowStartIndex)+1,this->cols);
 
-	for(long i = rowStartIndex; i <= rowEndIndex; i++)
+	for(RC_INT i = rowStartIndex; i <= rowEndIndex; i++)
 	{
-	for(long j = 0; j < this->cols; j++)
+	for(RC_INT j = 0; j < this->cols; j++)
 	{
 	M(i-rowStartIndex,j) = this->operator()(i,j);
 	}}
@@ -636,13 +636,13 @@ LapackMatrix getRowSlice(long rowStartIndex, long rowEndIndex)
 	return M;
 }
 
-LapackMatrix getColSlice(long colStartIndex, long colEndIndex)
+LapackMatrix getColSlice(RC_INT colStartIndex, RC_INT colEndIndex)
 {
 	LapackMatrix M(this->rows, (colEndIndex-colStartIndex)+1);
 
-	for(long i = 0; i < this->rows; i++)
+	for(RC_INT i = 0; i < this->rows; i++)
 	{
-	for(long j = colStartIndex; j <= colEndIndex; j++)
+	for(RC_INT j = colStartIndex; j <= colEndIndex; j++)
 	{
 	M(i,j-colStartIndex) = this->operator()(i,j);
 	}}
@@ -658,9 +658,9 @@ void printDense(std::ostream& outStream, int precision = 3)
 	    std::ios_base::fmtflags ff = outStream.flags();
 	    int precisionCache = outStream.precision(precision);
 
-        for(long i = 0;  i < rows; i++)
+        for(RC_INT i = 0;  i < rows; i++)
         {
-        for(long j = 0; j <  cols; j++)
+        for(RC_INT j = 0; j <  cols; j++)
         {
           val = this->operator()(i,j);
           outStream <<   std::scientific <<  std::showpos << std::right << std::setw(precision+7) << val << " ";
@@ -676,7 +676,7 @@ void printDense(std::ostream& outStream, int precision = 3)
 friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
 {
 	    std::ios_base::fmtflags ff = outStream.flags();
-        long i; long j;
+        RC_INT i; RC_INT j;
 
         for(i = 0;  i < V.rows; i++)
         {
@@ -691,10 +691,10 @@ friend std::ostream& operator<<(std::ostream& outStream, const LapackMatrix&  V)
 }
 
 
-long getRowDimension() const
+RC_INT getRowDimension() const
 {return rows;}
 
-long getColDimension() const
+RC_INT getColDimension() const
 {return cols;}
 
 double* getDataPointer() const
@@ -705,27 +705,6 @@ bool getExternalDataFlag() const
 	return externDataFlag;
 }
 
-//
-//###################################################################
-//  "low level" routines with direct call to Lapack routines
-//            ----> No bounds checking <----
-//###################################################################
-//
-// y = alpha*(*this)*x + beta*y
-//
-
-void dgemv(char trans, double alpha, double*x, double beta, double* y)
-{
-	char TRANS     = trans;
-    double ALPHA   = alpha;
-    double BETA    = beta ;
-    long INCX      = 1;
-    long INCY      = 1;
-
-    dgemv_(&TRANS,&rows,&cols,&ALPHA,dataPtr,&rows,x,&INCX,&BETA,y,&INCY);
-}
-
-
 //###################################################################
 //                      Bounds Checking
 //###################################################################
@@ -734,7 +713,7 @@ void dgemv(char trans, double alpha, double*x, double beta, double* y)
 
 
 #ifdef _DEBUG
-        bool boundsCheck(long i, long begin, long end,int coordinate) const
+        bool boundsCheck(RC_INT i, RC_INT begin, RC_INT end,int coordinate) const
         {
         if((i < begin)||(i  > end))
         {
@@ -745,7 +724,7 @@ void dgemv(char trans, double alpha, double*x, double beta, double* y)
         return true;
         }
 #else
-        bool boundsCheck(long, long, long,int) const {return true;}
+        bool boundsCheck(RC_INT, RC_INT, RC_INT,int) const {return true;}
 #endif
 
 #ifdef _DEBUG
@@ -764,7 +743,7 @@ void dgemv(char trans, double alpha, double*x, double beta, double* y)
 #endif
 
 #ifdef _DEBUG
-    bool sizeCheck(long size1, long size2)
+    bool sizeCheck(RC_INT size1, RC_INT size2)
     {
     if(size1 != size2)
     {
@@ -774,7 +753,7 @@ void dgemv(char trans, double alpha, double*x, double beta, double* y)
     return true;
     }
 
-    bool sizeCheck(long size1, long size2) const
+    bool sizeCheck(RC_INT size1, RC_INT size2) const
     {
     if(size1 != size2)
     {
@@ -784,15 +763,15 @@ void dgemv(char trans, double alpha, double*x, double beta, double* y)
     return true;
     }
 #else
-    bool sizeCheck(long, long) {return true;}
-    bool sizeCheck(long, long) const{return true;}
+    bool sizeCheck(RC_INT, RC_INT) {return true;}
+    bool sizeCheck(RC_INT, RC_INT) const{return true;}
 #endif
 
 
 
     double*       dataPtr;
-	long             rows;
-	long             cols;
+	RC_INT             rows;
+	RC_INT             cols;
 
 	bool   externDataFlag;
 
